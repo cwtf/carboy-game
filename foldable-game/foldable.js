@@ -228,6 +228,7 @@
   }
 
   function updateSecondary() {
+    installAutoSave();
     installExpandedUpgradeShop();
     const game = globalThis.CARBOY;
     const progress = game?.progress;
@@ -280,6 +281,163 @@
   ];
   const NEXT_DAY_UPGRADE_ID = "__carboy_next_day__";
   const UPGRADE_BASE_COST = 10;
+  const SAVE_KEY = "carboy-progress-v1";
+  const VALID_UPGRADE_IDS = new Set(ALL_UPGRADES.map((upgrade) => upgrade.id));
+  let autoSaveInstalled = false;
+  let savingDisabled = false;
+  let sessionHasProgress = false;
+  let lastSavedPayload = "";
+
+  function sanitizeSavedGame(value) {
+    if (!value || typeof value !== "object") return null;
+    const day = Math.max(1, Math.min(9999, Math.floor(number(value.day, 1))));
+    const stash = Math.max(0, Math.min(1_000_000_000, Math.floor(number(value.stash))));
+    const taken = Array.isArray(value.taken)
+      ? value.taken.filter((id) => VALID_UPGRADE_IDS.has(id)).slice(0, 500)
+      : [];
+    return { version: 1, day, stash, taken };
+  }
+
+  function readSavedGame() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      return raw ? sanitizeSavedGame(JSON.parse(raw)) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function currentSavedGame() {
+    const game = globalThis.CARBOY;
+    if (!game?.progress) return null;
+    const atIntermission = Boolean(game.upgradeScreen?.open);
+    return sanitizeSavedGame({
+      version: 1,
+      day: game.progress.day + (atIntermission ? 1 : 0),
+      stash: game.progress.stash,
+      taken: game.progress.taken,
+    });
+  }
+
+  function saveProgress(force = false) {
+    if (savingDisabled || (!sessionHasProgress && !force)) return false;
+    const data = currentSavedGame();
+    if (!data) return false;
+    try {
+      const payload = JSON.stringify(data);
+      if (payload !== lastSavedPayload) {
+        localStorage.setItem(SAVE_KEY, payload);
+        lastSavedPayload = payload;
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function resetNewGameButton(button) {
+    button.dataset.confirmNewGame = "false";
+    button.textContent = button.dataset.defaultLabel || "NEW GAME";
+    button.classList.remove("is-confirming");
+  }
+
+  function startNewGame() {
+    savingDisabled = true;
+    try {
+      localStorage.removeItem(SAVE_KEY);
+    } catch (_) {
+      // Reloading still resets this in-memory run if storage is unavailable.
+    }
+    location.reload();
+  }
+
+  function addNewGameButton(container, locationName) {
+    if (!container || container.querySelector(`[data-new-game-location="${locationName}"]`)) return null;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `carboy-new-game carboy-new-game-${locationName}`;
+    button.dataset.newGameLocation = locationName;
+    button.dataset.defaultLabel = "NEW GAME";
+    button.textContent = "NEW GAME";
+    button.setAttribute("aria-label", "Start a new game and erase saved progress");
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (button.dataset.confirmNewGame === "true") {
+        startNewGame();
+        return;
+      }
+      button.dataset.confirmNewGame = "true";
+      button.textContent = "CONFIRM NEW GAME";
+      button.classList.add("is-confirming");
+      setTimeout(() => document.contains(button) && resetNewGameButton(button), 3500);
+    });
+    container.appendChild(button);
+    return button;
+  }
+
+  function installNewGameControls(game, saved) {
+    const titleRoot = game.titleScreen?.root;
+    const startButton = titleRoot?.querySelector(".carboyStartButton");
+    if (startButton && startButton.dataset.autoSaveBound !== "true") {
+      startButton.dataset.autoSaveBound = "true";
+      const markStarted = () => {
+        sessionHasProgress = true;
+        queueMicrotask(() => saveProgress(true));
+      };
+      startButton.addEventListener("pointerdown", markStarted);
+      startButton.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") markStarted();
+      });
+    }
+    if (saved && startButton) {
+      startButton.textContent = `CONTINUE DAY ${saved.day}`;
+      startButton.setAttribute("aria-label", `Continue Day ${saved.day}`);
+      let saveSummary = titleRoot.querySelector(".carboy-save-summary");
+      if (!saveSummary) {
+        saveSummary = document.createElement("div");
+        saveSummary.className = "carboy-save-summary";
+        titleRoot.appendChild(saveSummary);
+      }
+      saveSummary.textContent = `AUTO-SAVE FOUND · DAY ${saved.day} · STASH ${saved.stash}`;
+      addNewGameButton(titleRoot, "title");
+    }
+
+    const pauseRoot = [...frame.children].find((element) =>
+      element !== titleRoot
+      && element.textContent.includes("PAUSED")
+      && [...element.querySelectorAll("button")].some((button) => button.textContent.trim() === "RESUME"));
+    addNewGameButton(pauseRoot?.firstElementChild, "pause");
+  }
+
+  function installAutoSave() {
+    const game = globalThis.CARBOY;
+    if (autoSaveInstalled || !game?.progress || !game?.titleScreen) return;
+    autoSaveInstalled = true;
+
+    const saved = readSavedGame();
+    if (saved) {
+      game.progress.day = saved.day;
+      game.progress.stash = saved.stash;
+      game.progress.carried = 0;
+      game.progress.taken = [...saved.taken];
+      game.progress.apply();
+      game.player.vehicle.setMass(game.TUNING.player.mass);
+      game.player.rig.setScale(game.progress.visualScale);
+      sessionHasProgress = true;
+      lastSavedPayload = JSON.stringify(saved);
+    }
+    installNewGameControls(game, saved);
+
+    setInterval(() => {
+      if (!game.titleScreen.open) sessionHasProgress = true;
+      saveProgress();
+    }, 500);
+    window.addEventListener("pagehide", () => saveProgress());
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) saveProgress();
+    });
+  }
   let upgradeShopInstalled = false;
 
   function upgradeCost(level) {
@@ -356,6 +514,8 @@
             button.disabled = true;
             progress.stash -= currentCost;
             originalTake(upgrade.id);
+            sessionHasProgress = true;
+            saveProgress(true);
             game.player.vehicle.setMass(game.TUNING.player.mass);
             game.player.rig.setScale(progress.visualScale);
             render();
@@ -378,6 +538,7 @@
         });
 
         screen.cards.replaceChildren(grid, nextButton);
+        addNewGameButton(screen.cards, "upgrade");
       };
 
       render();
@@ -502,10 +663,19 @@
   layout();
 
   globalThis.CARBOY_FOLDABLE = {
-    version: 4,
+    version: 5,
     layout: scheduleLayout,
     getState: () => lastLayout,
     upgrades: { all: ALL_UPGRADES, costForLevel: upgradeCost },
+    save: {
+      key: SAVE_KEY,
+      read: readSavedGame,
+      saveNow: () => {
+        sessionHasProgress = true;
+        return saveProgress(true);
+      },
+      startNewGame,
+    },
   };
 })();
 

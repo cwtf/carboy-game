@@ -34,6 +34,19 @@ const server = http.createServer((request, response) => {
   });
 });
 
+const expectText = async (locator, expected) => {
+  await locator.waitFor({ state: "visible" });
+  await locator.evaluate((element, text) => new Promise((resolve) => {
+    if (element.textContent === text) return resolve();
+    const observer = new MutationObserver(() => {
+      if (element.textContent === text) {
+        observer.disconnect();
+        resolve();
+      }
+    });
+    observer.observe(element, { childList: true, characterData: true, subtree: true });
+  }), expected);
+};
 const listen = () => new Promise((resolvePromise, reject) => {
   server.once("error", reject);
   server.listen(0, "127.0.0.1", () => resolvePromise(server.address()));
@@ -196,7 +209,78 @@ const listen = () => new Promise((resolvePromise, reject) => {
     const screenshot = path.join(project, "test-results", "github-pages-subpath.png");
     fs.mkdirSync(path.dirname(screenshot), { recursive: true });
     await page.screenshot({ path: screenshot });
-    console.log(JSON.stringify({ passed: true, prefix, requests: [...new Set(requests)], state, upgradeShop, continuation, screenshot, upgradeScreenshot }, null, 2));
+    await page.evaluate(() => {
+      const progress = globalThis.CARBOY.progress;
+      progress.day = 4;
+      progress.stash = 45;
+      progress.taken = ["speed", "speed", "ram"];
+      progress.apply();
+      globalThis.CARBOY_FOLDABLE.save.saveNow();
+    });
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 120000 });
+    await page.waitForFunction(() => globalThis.CARBOY
+      && globalThis.CARBOY_FOLDABLE?.save
+      && document.querySelector(".carboyStartButton")?.textContent === "CONTINUE DAY 4", null, { timeout: 120000 });
+    const saveRestore = await page.evaluate(() => ({
+      day: globalThis.CARBOY.progress.day,
+      stash: globalThis.CARBOY.progress.stash,
+      speedLevel: globalThis.CARBOY.progress.count("speed"),
+      ramLevel: globalThis.CARBOY.progress.count("ram"),
+      titleOpen: globalThis.CARBOY.titleScreen.open,
+      startText: document.querySelector(".carboyStartButton").textContent,
+      summary: document.querySelector(".carboy-save-summary")?.textContent,
+      newGameVisible: document.querySelector('[data-new-game-location="title"]')?.getBoundingClientRect().height >= 44,
+      saved: globalThis.CARBOY_FOLDABLE.save.read(),
+    }));
+    assert.deepEqual({
+      day: saveRestore.day,
+      stash: saveRestore.stash,
+      speedLevel: saveRestore.speedLevel,
+      ramLevel: saveRestore.ramLevel,
+      titleOpen: saveRestore.titleOpen,
+      startText: saveRestore.startText,
+      newGameVisible: saveRestore.newGameVisible,
+    }, {
+      day: 4,
+      stash: 45,
+      speedLevel: 2,
+      ramLevel: 1,
+      titleOpen: true,
+      startText: "CONTINUE DAY 4",
+      newGameVisible: true,
+    });
+    assert.match(saveRestore.summary, /DAY 4[\s\S]*STASH 45/);
+
+    const newGameButton = page.locator('[data-new-game-location="title"]');
+    await newGameButton.click();
+    await expectText(newGameButton, "CONFIRM NEW GAME");
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 120000 }),
+      newGameButton.click(),
+    ]);
+    await page.waitForFunction(() => globalThis.CARBOY
+      && globalThis.CARBOY_FOLDABLE?.save
+      && document.querySelector(".carboyStartButton")?.textContent === "START DAY 1", null, { timeout: 120000 });
+    const newGame = await page.evaluate(() => ({
+      day: globalThis.CARBOY.progress.day,
+      stash: globalThis.CARBOY.progress.stash,
+      upgrades: globalThis.CARBOY.progress.taken.length,
+      startText: document.querySelector(".carboyStartButton").textContent,
+      titleNewGameButtons: document.querySelectorAll('[data-new-game-location="title"]').length,
+      saved: localStorage.getItem(globalThis.CARBOY_FOLDABLE.save.key),
+    }));
+    assert.deepEqual(newGame, {
+      day: 1,
+      stash: 0,
+      upgrades: 0,
+      startText: "START DAY 1",
+      titleNewGameButtons: 0,
+      saved: null,
+    });
+    assert.deepEqual(consoleErrors, []);
+    assert.deepEqual(pageErrors, []);
+    assert.deepEqual(failedRequests, []);
+    console.log(JSON.stringify({ passed: true, prefix, requests: [...new Set(requests)], state, upgradeShop, continuation, saveRestore, newGame, screenshot, upgradeScreenshot }, null, 2));
     await context.close();
   } finally {
     if (browser) await browser.close().catch(() => {});

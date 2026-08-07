@@ -4,7 +4,7 @@
       "label": "360x800",
       "screenshot": "test-results\\foldable-360x800.png",
       "state": {
-        "url": "http://127.0.0.1:32024/",
+        "url": "http://127.0.0.1:33941/",
         "viewport": {
           "width": 360,
           "height": 800,
@@ -89,7 +89,7 @@
       "label": "412x915",
       "screenshot": "test-results\\foldable-412x915.png",
       "state": {
-        "url": "http://127.0.0.1:32024/",
+        "url": "http://127.0.0.1:33941/",
         "viewport": {
           "width": 412,
           "height": 915,
@@ -140,7 +140,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 2,
-          "fps": 52.90072298544354,
+          "fps": 52.91005291005296,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -184,7 +184,7 @@
       "label": "717x512",
       "screenshot": "test-results\\foldable-717x512.png",
       "state": {
-        "url": "http://127.0.0.1:32024/",
+        "url": "http://127.0.0.1:33941/",
         "viewport": {
           "width": 717,
           "height": 512,
@@ -235,7 +235,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 2,
-          "fps": 56.23242736644805,
+          "fps": 56.232427366448036,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -279,7 +279,7 @@
       "label": "768x1024",
       "screenshot": "test-results\\foldable-768x1024.png",
       "state": {
-        "url": "http://127.0.0.1:32024/",
+        "url": "http://127.0.0.1:33941/",
         "viewport": {
           "width": 768,
           "height": 1024,
@@ -330,7 +330,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 2,
-          "fps": 60.216780403710736,
+          "fps": 59.98800238236088,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -374,7 +374,7 @@
       "label": "884x1104",
       "screenshot": "test-results\\foldable-884x1104.png",
       "state": {
-        "url": "http://127.0.0.1:32024/",
+        "url": "http://127.0.0.1:33941/",
         "viewport": {
           "width": 884,
           "height": 1104,
@@ -425,7 +425,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 2,
-          "fps": 59.92808630786106,
+          "fps": 59.97600961903153,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -469,7 +469,7 @@
       "label": "1768x2208",
       "screenshot": "test-results\\foldable-1768x2208.png",
       "state": {
-        "url": "http://127.0.0.1:32024/",
+        "url": "http://127.0.0.1:33941/",
         "viewport": {
           "width": 1768,
           "height": 2208,
@@ -520,7 +520,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 2,
-          "fps": 59.97600959044426,
+          "fps": 59.96402159276307,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -572,7 +572,7 @@
       "gap": 32,
       "screenshot": "test-results\\foldable-vertical-hinge.png",
       "state": {
-        "url": "http://127.0.0.1:32024/?foldable=vertical&hinge=32",
+        "url": "http://127.0.0.1:33941/?foldable=vertical&hinge=32",
         "viewport": {
           "width": 884,
           "height": 1104,
@@ -613,7 +613,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 0,
-          "fps": 59.964021564187014,
+          "fps": 59.964021592762954,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -677,7 +677,7 @@
       "gap": 36,
       "screenshot": "test-results\\foldable-horizontal-hinge.png",
       "state": {
-        "url": "http://127.0.0.1:32024/?foldable=horizontal&hinge=36",
+        "url": "http://127.0.0.1:33941/?foldable=horizontal&hinge=36",
         "viewport": {
           "width": 1768,
           "height": 2208,
@@ -718,7 +718,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 0,
-          "fps": 60.08411774191845,
+          "fps": 60.04803844220697,
           "audioContext": "running",
           "audioSamples": 3
         },

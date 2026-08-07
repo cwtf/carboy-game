@@ -374,3 +374,62 @@ body {
     min-height: 110px;
   }
 }
+/* Autosave and new-game controls */
+.carboy-save-summary {
+  margin-top: 8px;
+  color: #cfe6ff;
+  font: 800 clamp(10px, 1.7vmin, 13px)/1.3 system-ui, sans-serif;
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+#frame .carboy-new-game {
+  min-height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  color: #eaf2ff;
+  background: rgba(10, 22, 43, 0.88);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.42);
+  cursor: pointer;
+  font: 900 12px/1 "Arial Black", Impact, system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  touch-action: manipulation;
+}
+
+#frame .carboy-new-game:hover {
+  background: rgba(28, 53, 89, 0.94);
+}
+
+#frame .carboy-new-game:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.42);
+}
+
+#frame .carboy-new-game.is-confirming {
+  border-color: #ff8d7a;
+  color: #ffffff;
+  background: #a52f24;
+}
+
+#frame .carboy-new-game-title {
+  width: min(72vw, 260px);
+  max-width: 260px !important;
+  margin-top: 7px;
+  padding: 11px 16px;
+}
+
+#frame .carboy-new-game-pause {
+  width: 100%;
+  max-width: none !important;
+  padding: 10px 12px;
+}
+
+#frame .carboy-new-game-upgrade {
+  width: min(100%, 300px);
+  max-width: 300px !important;
+  min-height: 44px;
+  align-self: center;
+  padding: 9px 14px;
+  background: rgba(10, 22, 43, 0.96);
+}

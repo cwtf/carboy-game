@@ -59,12 +59,12 @@ No separate game images or web fonts are requested. The world and vehicles are p
 ## Files changed or added
 
 - `foldable-src/foldable.css` — dynamic viewport, safe-area, touch-target, frame sizing, secondary-panel, and CSS viewport-segment support.
-- `foldable-src/foldable.js` — segment detection, fullscreen safe-viewport layout, live resize/orientation handling, Babylon backing-buffer synchronization, keyboard shortcuts, expanded upgrade-shop mechanics, and secondary status updates.
+- `foldable-src/foldable.js` — segment detection, fullscreen safe-viewport layout, live resize/orientation handling, Babylon backing-buffer synchronization, keyboard shortcuts, expanded upgrade-shop mechanics, local autosaving/New Game controls, and secondary status updates.
 - `tools/build-working-copy.cjs` — regenerates `foldable-game/` from the unchanged capture and verifies the original hash.
 - `tools/extract-embedded-assets.cjs` — decodes and checksums the embedded WASM/audio without changing the HTML.
 - `tools/audit-deployment.mjs` — reports scripts, styles, references, asset strings, and map declarations.
 - `tests/original-regression.cjs` — proves the untouched local game starts and runs.
-- `tests/foldable-regression.cjs` — responsive, hinge, backing-buffer, input-coordinate, audio, and no-reload state-preservation checks. The GitHub Pages regression also verifies all seven upgrades, level/cost updates, repeat purchases, stash deduction, and explicit continuation.
+- `tests/foldable-regression.cjs` — responsive, hinge, backing-buffer, input-coordinate, audio, and no-reload state-preservation checks. The GitHub Pages regression also verifies all seven upgrades, level/cost updates, repeat purchases, stash deduction, explicit continuation, refresh restoration, and confirmed New Game reset.
 
 The generated `foldable-game/index.html` adds viewport metadata and references `foldable.css` and `foldable.js`. It removes only the Cloudflare deployment telemetry helper; the original copy retains that helper and its downloaded response. No game bundle, physics, scoring, controls, audio, tuning, or state code was edited.
 
@@ -84,6 +84,7 @@ Keyboard additions reuse the production game's own state and pause UI:
 
 The intermission upgrade shop now lists all seven production upgrades instead of three random choices. Every card shows its current level and next price. Level 1 costs 10 coins, with each subsequent level costing 10 more coins (`10 × next level`). Purchases deduct from the existing stash immediately and can be repeated for any upgrade while affordable. A separate Start Next Day button ends shopping; it does not grant an extra upgrade.
 
+
 Progressive foldable support uses:
 
 - CSS `horizontal-viewport-segments` / `vertical-viewport-segments` media queries.
@@ -94,6 +95,14 @@ Progressive foldable support uses:
 When two or more segments exist, the script chooses the largest segment for gameplay and fills that segment without crossing the hinge. The whole game, HUD, touch controls, title screen, and upgrade UI stay inside it. A read-only day/coins/combo/speed and controls summary uses the best remaining segment. Neither region crosses the hinge.
 
 The development-only URL hooks `?foldable=vertical&hinge=32` and `?foldable=horizontal&hinge=36` reproduce segmented geometry in a desktop browser for regression testing. They are inactive in ordinary URLs.
+
+## Autosave and New Game
+
+Progress is stored automatically in browser `localStorage` under `carboy-progress-v1`. The checkpoint contains the current day, banked coin stash, selected upgrades, and every upgrade's level. On refresh, those values and their gameplay effects are restored before the title screen changes to `CONTINUE DAY N`.
+
+Saving begins once a run starts and updates when progress changes, when upgrades are purchased, when the page is hidden, and when it closes. Refreshing during a fight restarts the current day from its beginning while preserving durable progress. Refreshing from an intermission checkpoints the following day so a cleared day cannot be replayed for duplicate coins.
+
+A `NEW GAME` option is available on the continue screen, pause menu, and upgrade shop. It requires a second confirmation click, then clears the local save and reloads a clean Day 1 game.
 
 ## Running locally
 
@@ -156,4 +165,6 @@ node tests\foldable-regression.cjs
 - Application names are partly readable, but reconstructing original modules or safely changing core physics/game logic would require source access.
 - No physical foldable device was attached. Both hinge orientations were tested with deterministic viewport-segment emulation, while the production path uses the browser's real CSS segment environment values or legacy segment rectangles when available.
 - The decoded asset files are archival/convenience copies. The production module still prefers the byte-identical embedded globals, preserving its deployed loading behavior.
+- Saves are browser-local and origin-specific. A save made on `127.0.0.1` is separate from the GitHub Pages save, and clearing browser site data removes it.
+- The deployed bundle does not expose a safe serialization format for live physics, enemies, or partially collected day coins. Refresh therefore restarts the current day rather than resuming the exact frame.
 

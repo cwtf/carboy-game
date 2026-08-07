@@ -31,6 +31,6 @@ Open `http://127.0.0.1:8000/`.
 
 - `index.html` — complete production game, including embedded Havok WASM and audio.
 - `foldable.css` — safe-area, dynamic viewport, touch-target, and viewport-segment styling.
-- `foldable.js` — fullscreen live resizing, hinge placement, canvas synchronization, Escape pause/resume, cursor-directed Shift-to-RAM, the expanded repeat-purchase upgrade shop, and secondary segment UI.
+- `foldable.js` — fullscreen live resizing, hinge placement, canvas synchronization, Escape pause/resume, cursor-directed Shift-to-RAM, the expanded repeat-purchase upgrade shop, browser-local autosaving, confirmed New Game controls, and secondary segment UI.
 - `.nojekyll` — tells GitHub Pages to serve the files directly without Jekyll processing.
 

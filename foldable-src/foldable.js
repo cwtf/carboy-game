@@ -228,6 +228,7 @@
   }
 
   function updateSecondary() {
+    installExpandedUpgradeShop();
     const game = globalThis.CARBOY;
     const progress = game?.progress;
     if (statElements.day) statElements.day.textContent = String(number(progress?.day, 1));
@@ -268,6 +269,123 @@
     observer.observe(document.documentElement);
   }
 
+  const ALL_UPGRADES = [
+    { id: "speed", name: "TUNED ENGINE", blurb: "More top speed.", effect: "+18% speed" },
+    { id: "power", name: "REINFORCED BUMPER", blurb: "Shove harder. Same size.", effect: "+22% push" },
+    { id: "size", name: "HEAVY CHASSIS", blurb: "Bigger and harder to move. Pushes no harder.", effect: "+16% mass, −18% knockback taken" },
+    { id: "ram", name: "NITRO RAM", blurb: "A charged hit launches further.", effect: "+25% ram force" },
+    { id: "magnet", name: "COIN MAGNET", blurb: "Pull gold in from further away.", effect: "+35% magnet range" },
+    { id: "grip", name: "RACE TYRES", blurb: "Hold a line through corners.", effect: "+30% grip" },
+    { id: "charge", name: "QUICK WIND-UP", blurb: "Reach full ram sooner.", effect: "−18% charge time" },
+  ];
+  const NEXT_DAY_UPGRADE_ID = "__carboy_next_day__";
+  const UPGRADE_BASE_COST = 10;
+  let upgradeShopInstalled = false;
+
+  function upgradeCost(level) {
+    return UPGRADE_BASE_COST * (level + 1);
+  }
+
+  function installExpandedUpgradeShop() {
+    const game = globalThis.CARBOY;
+    if (upgradeShopInstalled || !game?.upgradeScreen || !game?.progress) return;
+    upgradeShopInstalled = true;
+
+    const screen = game.upgradeScreen;
+    const progress = game.progress;
+    const originalTake = progress.take.bind(progress);
+    progress.take = (id) => id === NEXT_DAY_UPGRADE_ID ? undefined : originalTake(id);
+
+    screen.show = (day, summary) => {
+      screen.title.textContent = `DAY ${day} CLEARED`;
+      screen.root.classList.add("carboy-upgrade-shop");
+      const shopLabel = screen.root.children[2];
+      if (shopLabel) {
+        shopLabel.classList.add("carboy-upgrade-label");
+        shopLabel.textContent = "UPGRADE AS MUCH AS YOU CAN AFFORD";
+      }
+      screen.cards.classList.add("carboy-upgrade-cards");
+      screen.root.style.display = "flex";
+
+      const render = () => {
+        screen.stats.innerHTML = `${summary.knockouts} knocked off &nbsp;·&nbsp; ${summary.coins} coins &nbsp;·&nbsp; best ×${summary.bestCombo}<br><span style="color:#ffd23f">STASH ${progress.stash}</span>`;
+        const grid = document.createElement("div");
+        grid.className = "carboy-upgrade-grid";
+
+        for (const upgrade of ALL_UPGRADES) {
+          const level = progress.count(upgrade.id);
+          const cost = upgradeCost(level);
+          const affordable = progress.stash >= cost;
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "carboy-upgrade-card";
+          button.dataset.upgradeId = upgrade.id;
+          button.disabled = !affordable;
+          button.setAttribute("aria-label", `${upgrade.name}, level ${level}, upgrade to level ${level + 1} for ${cost} coins`);
+
+          const heading = document.createElement("div");
+          heading.className = "carboy-upgrade-heading";
+          const name = document.createElement("span");
+          name.className = "carboy-upgrade-name";
+          name.textContent = upgrade.name;
+          const levelText = document.createElement("span");
+          levelText.className = "carboy-upgrade-level";
+          levelText.textContent = `LEVEL ${level}`;
+          heading.append(name, levelText);
+
+          const blurb = document.createElement("div");
+          blurb.className = "carboy-upgrade-blurb";
+          blurb.textContent = upgrade.blurb;
+          const footer = document.createElement("div");
+          footer.className = "carboy-upgrade-footer";
+          const effect = document.createElement("span");
+          effect.className = "carboy-upgrade-effect";
+          effect.textContent = upgrade.effect;
+          const price = document.createElement("span");
+          price.className = "carboy-upgrade-price";
+          price.textContent = affordable ? `${cost} COINS → LEVEL ${level + 1}` : `NEED ${cost} COINS`;
+          footer.append(effect, price);
+          button.append(heading, blurb, footer);
+
+          button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const currentLevel = progress.count(upgrade.id);
+            const currentCost = upgradeCost(currentLevel);
+            if (progress.stash < currentCost) return;
+            button.disabled = true;
+            progress.stash -= currentCost;
+            originalTake(upgrade.id);
+            game.player.vehicle.setMass(game.TUNING.player.mass);
+            game.player.rig.setScale(progress.visualScale);
+            render();
+          });
+          grid.appendChild(button);
+        }
+
+        const nextButton = document.createElement("button");
+        nextButton.type = "button";
+        nextButton.className = "carboy-next-day";
+        nextButton.textContent = `START DAY ${day + 1}`;
+        nextButton.setAttribute("aria-label", `Proceed to Day ${day + 1}`);
+        nextButton.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          nextButton.disabled = true;
+          screen.root.style.display = "none";
+          screen.resolve?.({ id: NEXT_DAY_UPGRADE_ID });
+          screen.resolve = null;
+        });
+
+        screen.cards.replaceChildren(grid, nextButton);
+      };
+
+      render();
+      return new Promise((resolve) => {
+        screen.resolve = resolve;
+      });
+    };
+  }
   document.addEventListener("visibilitychange", updateSecondary);
   const ramKeys = new Set();
   const mouseAim = { x: 0, y: 0, available: false };
@@ -384,9 +502,10 @@
   layout();
 
   globalThis.CARBOY_FOLDABLE = {
-    version: 3,
+    version: 4,
     layout: scheduleLayout,
     getState: () => lastLayout,
+    upgrades: { all: ALL_UPGRADES, costForLevel: upgradeCost },
   };
 })();
 

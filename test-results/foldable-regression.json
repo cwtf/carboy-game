@@ -4,7 +4,7 @@
       "label": "360x800",
       "screenshot": "test-results\\foldable-360x800.png",
       "state": {
-        "url": "http://127.0.0.1:30891/",
+        "url": "http://127.0.0.1:32024/",
         "viewport": {
           "width": 360,
           "height": 800,
@@ -37,7 +37,7 @@
           "bottom": 0,
           "width": 0,
           "height": 0,
-          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM or Shift to charge, then release to strike. Press Esc to pause or resume.\n    Game running\n  "
+          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM to aim by touch, or hold Shift and aim with the mouse. Release to strike; press Esc to pause.\n    Game running\n  "
         },
         "targets": [],
         "game": {
@@ -45,7 +45,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 0,
-          "fps": 59.9760095904441,
+          "fps": 59.96402159276299,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -89,7 +89,7 @@
       "label": "412x915",
       "screenshot": "test-results\\foldable-412x915.png",
       "state": {
-        "url": "http://127.0.0.1:30891/",
+        "url": "http://127.0.0.1:32024/",
         "viewport": {
           "width": 412,
           "height": 915,
@@ -122,7 +122,7 @@
           "bottom": 0,
           "width": 0,
           "height": 0,
-          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM or Shift to charge, then release to strike. Press Esc to pause or resume.\n    Game running\n  "
+          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM to aim by touch, or hold Shift and aim with the mouse. Release to strike; press Esc to pause.\n    Game running\n  "
         },
         "targets": [
           {
@@ -140,7 +140,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 2,
-          "fps": 51.39626520052982,
+          "fps": 52.90072298544354,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -184,7 +184,7 @@
       "label": "717x512",
       "screenshot": "test-results\\foldable-717x512.png",
       "state": {
-        "url": "http://127.0.0.1:30891/",
+        "url": "http://127.0.0.1:32024/",
         "viewport": {
           "width": 717,
           "height": 512,
@@ -217,7 +217,7 @@
           "bottom": 0,
           "width": 0,
           "height": 0,
-          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM or Shift to charge, then release to strike. Press Esc to pause or resume.\n    Game running\n  "
+          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM to aim by touch, or hold Shift and aim with the mouse. Release to strike; press Esc to pause.\n    Game running\n  "
         },
         "targets": [
           {
@@ -235,7 +235,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 2,
-          "fps": 56.22188904039996,
+          "fps": 56.23242736644805,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -279,7 +279,7 @@
       "label": "768x1024",
       "screenshot": "test-results\\foldable-768x1024.png",
       "state": {
-        "url": "http://127.0.0.1:30891/",
+        "url": "http://127.0.0.1:32024/",
         "viewport": {
           "width": 768,
           "height": 1024,
@@ -312,7 +312,7 @@
           "bottom": 0,
           "width": 0,
           "height": 0,
-          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM or Shift to charge, then release to strike. Press Esc to pause or resume.\n    Game running\n  "
+          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM to aim by touch, or hold Shift and aim with the mouse. Release to strike; press Esc to pause.\n    Game running\n  "
         },
         "targets": [
           {
@@ -330,7 +330,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 2,
-          "fps": 59.976009590444086,
+          "fps": 60.216780403710736,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -374,7 +374,7 @@
       "label": "884x1104",
       "screenshot": "test-results\\foldable-884x1104.png",
       "state": {
-        "url": "http://127.0.0.1:30891/",
+        "url": "http://127.0.0.1:32024/",
         "viewport": {
           "width": 884,
           "height": 1104,
@@ -407,7 +407,7 @@
           "bottom": 0,
           "width": 0,
           "height": 0,
-          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM or Shift to charge, then release to strike. Press Esc to pause or resume.\n    Game running\n  "
+          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM to aim by touch, or hold Shift and aim with the mouse. Release to strike; press Esc to pause.\n    Game running\n  "
         },
         "targets": [
           {
@@ -425,7 +425,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 2,
-          "fps": 59.964021592763004,
+          "fps": 59.92808630786106,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -469,7 +469,7 @@
       "label": "1768x2208",
       "screenshot": "test-results\\foldable-1768x2208.png",
       "state": {
-        "url": "http://127.0.0.1:30891/",
+        "url": "http://127.0.0.1:32024/",
         "viewport": {
           "width": 1768,
           "height": 2208,
@@ -502,7 +502,7 @@
           "bottom": 0,
           "width": 0,
           "height": 0,
-          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM or Shift to charge, then release to strike. Press Esc to pause or resume.\n    Game running\n  "
+          "text": "\n    Trouble in paradise\n    CARBOY\n    \n      Day1\n      Coins0\n      Combo—\n      Speed0\n    \n    Drag on the game screen to steer. Hold RAM to aim by touch, or hold Shift and aim with the mouse. Release to strike; press Esc to pause.\n    Game running\n  "
         },
         "targets": [
           {
@@ -520,7 +520,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 2,
-          "fps": 59.976009590444136,
+          "fps": 59.97600959044426,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -572,7 +572,7 @@
       "gap": 32,
       "screenshot": "test-results\\foldable-vertical-hinge.png",
       "state": {
-        "url": "http://127.0.0.1:30891/?foldable=vertical&hinge=32",
+        "url": "http://127.0.0.1:32024/?foldable=vertical&hinge=32",
         "viewport": {
           "width": 884,
           "height": 1104,
@@ -605,7 +605,7 @@
           "bottom": 1093.328125,
           "width": 404.6875,
           "height": 1082.6875,
-          "text": "TROUBLE IN PARADISE\nCAR\nBOY\nDAY\n1\nCOINS\n0\nCOMBO\n—\nSPEED\n0\n\nDrag on the game screen to steer. Hold RAM or Shift to charge, then release to strike. Press Esc to pause or resume.\n\nGAME RUNNING"
+          "text": "TROUBLE IN PARADISE\nCAR\nBOY\nDAY\n1\nCOINS\n0\nCOMBO\n—\nSPEED\n0\n\nDrag on the game screen to steer. Hold RAM to aim by touch, or hold Shift and aim with the mouse. Release to strike; press Esc to pause.\n\nGAME RUNNING"
         },
         "targets": [],
         "game": {
@@ -613,7 +613,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 0,
-          "fps": 59.95203835787876,
+          "fps": 59.964021564187014,
           "audioContext": "running",
           "audioSamples": 3
         },
@@ -677,7 +677,7 @@
       "gap": 36,
       "screenshot": "test-results\\foldable-horizontal-hinge.png",
       "state": {
-        "url": "http://127.0.0.1:30891/?foldable=horizontal&hinge=36",
+        "url": "http://127.0.0.1:32024/?foldable=horizontal&hinge=36",
         "viewport": {
           "width": 1768,
           "height": 2208,
@@ -710,7 +710,7 @@
           "bottom": 2184,
           "width": 1720,
           "height": 1038,
-          "text": "TROUBLE IN PARADISE\nCAR\nBOY\nDAY\n1\nCOINS\n0\nCOMBO\n—\nSPEED\n0\n\nDrag on the game screen to steer. Hold RAM or Shift to charge, then release to strike. Press Esc to pause or resume.\n\nGAME RUNNING"
+          "text": "TROUBLE IN PARADISE\nCAR\nBOY\nDAY\n1\nCOINS\n0\nCOMBO\n—\nSPEED\n0\n\nDrag on the game screen to steer. Hold RAM to aim by touch, or hold Shift and aim with the mouse. Release to strike; press Esc to pause.\n\nGAME RUNNING"
         },
         "targets": [],
         "game": {
@@ -718,7 +718,7 @@
           "titleOpen": false,
           "day": 1,
           "enemies": 0,
-          "fps": 59.976009590444114,
+          "fps": 60.08411774191845,
           "audioContext": "running",
           "audioSamples": 3
         },

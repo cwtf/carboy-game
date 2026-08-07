@@ -59,12 +59,12 @@ No separate game images or web fonts are requested. The world and vehicles are p
 ## Files changed or added
 
 - `foldable-src/foldable.css` — dynamic viewport, safe-area, touch-target, frame sizing, secondary-panel, and CSS viewport-segment support.
-- `foldable-src/foldable.js` — segment detection, fullscreen safe-viewport layout, live resize/orientation handling, Babylon backing-buffer synchronization, keyboard shortcuts, and secondary status updates.
+- `foldable-src/foldable.js` — segment detection, fullscreen safe-viewport layout, live resize/orientation handling, Babylon backing-buffer synchronization, keyboard shortcuts, expanded upgrade-shop mechanics, and secondary status updates.
 - `tools/build-working-copy.cjs` — regenerates `foldable-game/` from the unchanged capture and verifies the original hash.
 - `tools/extract-embedded-assets.cjs` — decodes and checksums the embedded WASM/audio without changing the HTML.
 - `tools/audit-deployment.mjs` — reports scripts, styles, references, asset strings, and map declarations.
 - `tests/original-regression.cjs` — proves the untouched local game starts and runs.
-- `tests/foldable-regression.cjs` — responsive, hinge, backing-buffer, input-coordinate, audio, and no-reload state-preservation checks.
+- `tests/foldable-regression.cjs` — responsive, hinge, backing-buffer, input-coordinate, audio, and no-reload state-preservation checks. The GitHub Pages regression also verifies all seven upgrades, level/cost updates, repeat purchases, stash deduction, and explicit continuation.
 
 The generated `foldable-game/index.html` adds viewport metadata and references `foldable.css` and `foldable.js`. It removes only the Cloudflare deployment telemetry helper; the original copy retains that helper and its downloaded response. No game bundle, physics, scoring, controls, audio, tuning, or state code was edited.
 
@@ -81,6 +81,8 @@ Keyboard additions reuse the production game's own state and pause UI:
 - Hold either Shift key to charge RAM. The direction continuously follows the mouse cursor; release Shift to strike.
 - Press Escape to open or close the existing pause menu when pausing is available.
 - The original touch, pointer, and Space-bar controls remain unchanged.
+
+The intermission upgrade shop now lists all seven production upgrades instead of three random choices. Every card shows its current level and next price. Level 1 costs 10 coins, with each subsequent level costing 10 more coins (`10 × next level`). Purchases deduct from the existing stash immediately and can be repeated for any upgrade while affordable. A separate Start Next Day button ends shopping; it does not grant an extra upgrade.
 
 Progressive foldable support uses:
 
@@ -150,6 +152,7 @@ node tests\foldable-regression.cjs
 ## Limitations
 
 - The original source repository and source maps are not exposed, so the adaptation is a carefully isolated runtime layer over a minified production bundle rather than a source-level rebuild.
+- The deployed game had no upgrade pricing logic; it granted one free random upgrade. The new 10-coins-per-next-level price curve is therefore an explicit balance rule added by this adaptation.
 - Application names are partly readable, but reconstructing original modules or safely changing core physics/game logic would require source access.
 - No physical foldable device was attached. Both hinge orientations were tested with deterministic viewport-segment emulation, while the production path uses the browser's real CSS segment environment values or legacy segment rectangles when available.
 - The decoded asset files are archival/convenience copies. The production module still prefers the byte-identical embedded globals, preserving its deployed loading behavior.

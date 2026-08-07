@@ -227,4 +227,150 @@ body {
     transition-duration: 0.01ms;
   }
 }
+/* Expanded intermission upgrade shop */
+#frame .carboy-upgrade-shop {
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(10px, 2.2vmin, 22px) !important;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
 
+#frame .carboy-upgrade-shop .carboy-upgrade-label {
+  margin: 0;
+  color: #7fe0a0;
+  font-size: clamp(10px, 1.7vmin, 13px) !important;
+  letter-spacing: 0.12em !important;
+  text-align: center;
+}
+
+#frame .carboy-upgrade-shop .carboy-upgrade-cards {
+  display: flex !important;
+  width: min(100%, 1040px) !important;
+  max-width: 1040px !important;
+  gap: 12px !important;
+  padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
+}
+
+.carboy-upgrade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr));
+  gap: clamp(8px, 1.4vmin, 14px);
+  width: 100%;
+}
+
+#frame .carboy-upgrade-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 7px;
+  width: 100%;
+  max-width: none !important;
+  min-height: 124px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 12px;
+  color: #18253a;
+  background: linear-gradient(180deg, #ffffff, #e8edf5);
+  box-shadow: 0 5px 0 #8d97a8, 0 9px 18px rgba(0, 0, 0, 0.32), inset 0 2px 0 #ffffff;
+  cursor: pointer;
+  font: 700 12px/1.35 system-ui, sans-serif;
+  text-align: left;
+}
+
+#frame .carboy-upgrade-card:not(:disabled):hover {
+  background: linear-gradient(180deg, #fff9d8, #ffe985);
+}
+
+#frame .carboy-upgrade-card:not(:disabled):active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #8d97a8, 0 4px 10px rgba(0, 0, 0, 0.35), inset 0 2px 0 #ffffff;
+}
+
+#frame .carboy-upgrade-card:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  filter: saturate(0.45);
+}
+
+.carboy-upgrade-heading,
+.carboy-upgrade-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.carboy-upgrade-name {
+  color: #12305c;
+  font: 900 clamp(14px, 2vmin, 18px)/1.1 "Arial Black", Impact, system-ui, sans-serif;
+}
+
+.carboy-upgrade-level {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #183c68;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.carboy-upgrade-blurb {
+  flex: 1;
+  color: #56647a;
+}
+
+.carboy-upgrade-effect {
+  color: #0f7a43;
+  font-weight: 900;
+}
+
+.carboy-upgrade-price {
+  color: #8b4308;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-align: right;
+}
+
+#frame .carboy-next-day {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  width: min(100%, 420px);
+  max-width: 420px !important;
+  min-height: 58px;
+  align-self: center;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 12px;
+  color: #18253a;
+  background: #ffd23f;
+  box-shadow: 0 5px 0 #8b4308, 0 10px 22px rgba(0, 0, 0, 0.42), inset 0 2px 0 #fff2a8;
+  cursor: pointer;
+  font: 900 15px/1 "Arial Black", Impact, system-ui, sans-serif;
+  letter-spacing: 0.08em;
+}
+
+#frame .carboy-next-day:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #8b4308, 0 5px 12px rgba(0, 0, 0, 0.4), inset 0 2px 0 #fff2a8;
+}
+
+@media (max-height: 560px) {
+  #frame .carboy-upgrade-shop {
+    align-items: stretch !important;
+  }
+
+  #frame .carboy-upgrade-shop .carboy-upgrade-cards {
+    align-self: center;
+  }
+
+  #frame .carboy-upgrade-card {
+    min-height: 110px;
+  }
+}

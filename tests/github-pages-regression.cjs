@@ -140,10 +140,63 @@ const listen = () => new Promise((resolvePromise, reject) => {
     assert.deepEqual(failedRequests, []);
     assert.deepEqual([...new Set(requests)], [prefix, `${prefix}foldable.css`, `${prefix}foldable.js`]);
 
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.waitForFunction(() => globalThis.CARBOY.upgradeScreen.show.toString().includes("carboy-upgrade-shop"));
+    await page.evaluate(() => {
+      globalThis.CARBOY.progress.stash = 35;
+      globalThis.__upgradeShopPromise = globalThis.CARBOY.upgradeScreen.show(1, {
+        knockouts: 3,
+        coins: 35,
+        stash: 35,
+        bestCombo: 2,
+      }, []);
+      return true;
+    });
+    await page.waitForSelector(".carboy-upgrade-shop", { state: "visible" });
+    assert.equal(await page.locator(".carboy-upgrade-card").count(), 7);
+    assert.deepEqual(await page.locator(".carboy-upgrade-card").evaluateAll((cards) =>
+      cards.map((card) => card.dataset.upgradeId)), ["speed", "power", "size", "ram", "magnet", "grip", "charge"]);
+    assert.match(await page.locator('[data-upgrade-id="speed"]').innerText(), /LEVEL 0[\s\S]*10 COINS/);
+
+    await page.locator('[data-upgrade-id="speed"]').click();
+    await page.locator('[data-upgrade-id="speed"]').click();
+    const upgradeShop = await page.evaluate(() => ({
+      stash: globalThis.CARBOY.progress.stash,
+      speedLevel: globalThis.CARBOY.progress.count("speed"),
+      speedCard: document.querySelector('[data-upgrade-id="speed"]').innerText,
+      cardCount: document.querySelectorAll(".carboy-upgrade-card").length,
+      nextText: document.querySelector(".carboy-next-day").textContent,
+      nextVisible: (() => {
+        const rect = document.querySelector(".carboy-next-day").getBoundingClientRect();
+        return rect.height >= 44 && rect.top >= 0 && rect.bottom <= innerHeight;
+      })(),
+    }));
+    assert.equal(upgradeShop.stash, 5);
+    assert.equal(upgradeShop.speedLevel, 2);
+    assert.equal(upgradeShop.cardCount, 7);
+    assert.match(upgradeShop.speedCard, /LEVEL 2[\s\S]*NEED 30 COINS/);
+    assert.equal(upgradeShop.nextText, "START DAY 2");
+    assert.equal(upgradeShop.nextVisible, true);
+
+    const upgradeScreenshot = path.join(project, "test-results", "upgrade-shop-360x800.png");
+    await page.screenshot({ path: upgradeScreenshot });
+    await page.locator(".carboy-next-day").click();
+    const continuation = await page.evaluate(async () => {
+      const selection = await globalThis.__upgradeShopPromise;
+      const before = globalThis.CARBOY.progress.count("speed");
+      globalThis.CARBOY.progress.take(selection.id);
+      return {
+        selection: selection.id,
+        open: globalThis.CARBOY.upgradeScreen.open,
+        levelUnchanged: globalThis.CARBOY.progress.count("speed") === before,
+      };
+    });
+    assert.equal(continuation.open, false);
+    assert.equal(continuation.levelUnchanged, true);
     const screenshot = path.join(project, "test-results", "github-pages-subpath.png");
     fs.mkdirSync(path.dirname(screenshot), { recursive: true });
     await page.screenshot({ path: screenshot });
-    console.log(JSON.stringify({ passed: true, prefix, requests: [...new Set(requests)], state, screenshot }, null, 2));
+    console.log(JSON.stringify({ passed: true, prefix, requests: [...new Set(requests)], state, upgradeShop, continuation, screenshot, upgradeScreenshot }, null, 2));
     await context.close();
   } finally {
     if (browser) await browser.close().catch(() => {});

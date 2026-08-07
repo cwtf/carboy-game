@@ -1,0 +1,97 @@
+{
+  "source": "https://carboy.chickanerygroup.chatgpt.site/",
+  "capturedAt": "2026-08-07T03:49:14.585Z",
+  "note": "The deployed game references static WASM/audio paths, but those URLs returned 404. The browser-ready bytes are embedded in index.html and were decoded here without changing index.html.",
+  "files": [
+    {
+      "path": "cdn-cgi/challenge-platform/scripts/jsd/main.headers.txt",
+      "bytes": 1349,
+      "sha256": "afd51484569b9e77d37b86c788f93952aacc61d4a749d39e16479bada044fa0b",
+      "origin": "downloaded HTTP response"
+    },
+    {
+      "path": "cdn-cgi/challenge-platform/scripts/jsd/main.js",
+      "bytes": 20510,
+      "sha256": "1363a6e65c9217d884d6377f7474364bb83efe199641967b0950ba48bb1ee4e4",
+      "origin": "downloaded HTTP response"
+    },
+    {
+      "path": "response-headers.txt",
+      "bytes": 569,
+      "sha256": "50300ac95ce4a5b09eb85639059b176be4a61de714b63b361bcbad8ae4548d79",
+      "origin": "downloaded HTTP response"
+    },
+    {
+      "path": "index.html",
+      "bytes": 16945347,
+      "sha256": "8348c073afa5c7782ba3d396d1830183fbf25a61629fd1e35e062038d22a5d2e",
+      "origin": "downloaded HTTP response"
+    },
+    {
+      "path": "assets/HavokPhysics-BqNY-4N9.wasm",
+      "bytes": 2094563,
+      "sha256": "026917766f534c156286f07975850978dabf17c42e742bbfaaebbcb2215e4e11",
+      "origin": "embedded __CARBOY_WASM__ payload"
+    },
+    {
+      "path": "audio/coin-drop.ogg",
+      "bytes": 26049,
+      "sha256": "ed01d6f0ac2183580572d02ce63e61592ce8670645f1508b607793f913d20822",
+      "origin": "embedded audio/ogg data URI"
+    },
+    {
+      "path": "audio/metal-impact.ogg",
+      "bytes": 153266,
+      "sha256": "b3f1a16f5dda28d20c8b16689050647478812d92ee3c06a66ec4a425a85bb408",
+      "origin": "embedded audio/ogg data URI"
+    },
+    {
+      "path": "audio/engine-loop.ogg",
+      "bytes": 161185,
+      "sha256": "682cf6cab6724c54a543b1e6fe65998ad95c85e361849c442bf70de76b24d24e",
+      "origin": "embedded audio/ogg data URI"
+    },
+    {
+      "path": "audio/music/intro-1.mp3",
+      "bytes": 1425619,
+      "sha256": "aab11f82e5554090cd8e72b39c9d2152bf71c9eef527002bd0a064e3f1ca3a58",
+      "origin": "embedded audio/mpeg data URI"
+    },
+    {
+      "path": "audio/music/intro-2.mp3",
+      "bytes": 1423733,
+      "sha256": "fe2e7aefaae35f833cc0cc3dabef1c195b18243add801af1df1860d5bdb04c8c",
+      "origin": "embedded audio/mpeg data URI"
+    },
+    {
+      "path": "audio/music/day-1.mp3",
+      "bytes": 1038951,
+      "sha256": "de747bfe1acb57307aa8802df811a1299804e56be75bbba1a376afacfbf5c800",
+      "origin": "embedded audio/mpeg data URI"
+    },
+    {
+      "path": "audio/music/day-2.mp3",
+      "bytes": 776290,
+      "sha256": "9011f46e50fa8fbea63a802068188e679b8a081725bacd0e0df3f34735024f81",
+      "origin": "embedded audio/mpeg data URI"
+    },
+    {
+      "path": "audio/music/day-3.mp3",
+      "bytes": 1034236,
+      "sha256": "542d2841aab3a0b516b47dd98f1a4fcbe0323e5adf9304b6755571e30551d012",
+      "origin": "embedded audio/mpeg data URI"
+    },
+    {
+      "path": "audio/music/day-4.mp3",
+      "bytes": 1542913,
+      "sha256": "89fe98b4c3e7c994e4e82a76608bd5826149915da69abde64e3c97d22b6a9c89",
+      "origin": "embedded audio/mpeg data URI"
+    },
+    {
+      "path": "audio/music/day-5.mp3",
+      "bytes": 1501994,
+      "sha256": "57b740642d5f18f2ad169452491d9c45fbc809266adb1c3d884c189bed58dd9e",
+      "origin": "embedded audio/mpeg data URI"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+HTTP/1.1 302 Found
+Date: Fri, 07 Aug 2026 03:51:29 GMT
+Content-Length: 0
+Connection: keep-alive
+location: /cdn-cgi/challenge-platform/h/b/scripts/jsd/8eb6d5cd556e/main.js?
+cache-control: max-age=300, stale-if-error=10800, stale-while-revalidate=10800, public
+access-control-allow-origin: *
+set-cookie: __cf_bm=VkxJz4_413Asf2BuMC.XsmXYqJ8a3w_xSaLklWXTDEI-1786074689.2995682-1.0.1.1-912GjbVY2QQljWFEfbI5BBlOfhKsgfDIRBe4DrRLUSmxVTcuxDsiunqsYgFkhlaMXipARW9yaKvgF.pdga0RX_gnZO6_5oBGdUOk5_X_80afsxjsh76sGriIoCSGEAfk; HttpOnly; SameSite=None; Secure; Path=/; Domain=chatgpt.site; Expires=Fri, 07 Aug 2026 04:21:29 GMT
+Server: cloudflare
+CF-RAY: a27352b81a083e8d-KUL
+
+HTTP/1.1 200 OK
+Date: Fri, 07 Aug 2026 03:51:29 GMT
+Content-Type: application/javascript; charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+cache-control: max-age=14400, stale-if-error=10800, stale-while-revalidate=10800, public
+x-content-type-options: nosniff
+set-cookie: __cf_bm=1BYZLA88cQsbFa_ei1o8VWjgqKVSnMH.ryMu1OsqeIQ-1786074689.30537-1.0.1.1-ijOfOIt3g6cUEgVTw_dTvYK9DXXCFqvXFssG0JWXrt047B4_UUrcro5xCCrLg9_edE8Y1llkiS1xhL3_fleTsROoYVD1wlxf1hfc4IKmntwN5EZPu2yprmg8B4ByOedO; HttpOnly; SameSite=None; Secure; Path=/; Domain=chatgpt.site; Expires=Fri, 07 Aug 2026 04:21:29 GMT
+Content-Encoding: gzip
+Server: cloudflare
+CF-RAY: a27352b82a193e8d-KUL
+

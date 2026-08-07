@@ -1,0 +1,14 @@
+{
+  "sourceIndex": "deployed-original\\index.html",
+  "sourceSha256": "8348c073afa5c7782ba3d396d1830183fbf25a61629fd1e35e062038d22a5d2e",
+  "sourceBytes": 16945347,
+  "outputIndex": "foldable-game\\index.html",
+  "outputSha256": "9c12a81c945306f32f6ebd173248f2648291c22e8337a9925ddfd58fb6c701e4",
+  "outputBytes": 16944683,
+  "cloudflareDeploymentHelperRemoved": true,
+  "injected": [
+    "viewport metadata",
+    "foldable.css",
+    "foldable.js"
+  ]
+}

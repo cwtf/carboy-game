@@ -2,6 +2,12 @@
 
 This workspace contains an unchanged capture of the deployed frontend and a separate, locally runnable foldable-phone adaptation.
 
+## Attribution
+
+CAR BOY was created by the original author featured in [the original CAR BOY Reddit post](https://www.reddit.com/r/vibecoding/comments/1vhcbr2/i_vibe_coded_a_game_called_car_boy_about_a_little/).
+
+This repository is an unofficial modification built on top of that original game. Its changes focus on foldable-device support, responsive presentation, controls, upgrade flow, and local progress saving; credit for the original game, concept, artwork, gameplay, and production build belongs to the original author.
+
 ## Directory layout
 
 - `index.html`, `foldable.css`, `foldable.js`, and `.nojekyll` — the self-contained GitHub Pages site at the repository root.

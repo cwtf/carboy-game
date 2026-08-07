@@ -1,1 +1,2 @@
-test-results/
+# Generated browser screenshots and regression reports
+/test-results/

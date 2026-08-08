@@ -288,8 +288,8 @@
       help: "Hold SUCK (or Shift) to drag rivals in. Anything that reaches the nozzle is swallowed. The tank empties as you hold it and refills when you let go.",
       skills: [
         SPEED_SKILL,
-        { id: "suckPower", name: "TURBO MOTOR", blurb: "Drag rivals in harder.", effect: "+20% vacuum power" },
-        { id: "suckRange", name: "WIDE NOZZLE", blurb: "Reach further down the street.", effect: "+30% vacuum range" },
+        { id: "suckPower", name: "TURBO MOTOR", blurb: "Drag rivals in harder.", effect: "+10% vacuum power" },
+        { id: "suckRange", name: "WIDE INTAKE", blurb: "Reach further in every direction.", effect: "+10% vacuum range" },
         { id: "suckDuration", name: "BIGGER TANK", blurb: "Hold the suction for longer.", effect: "+25% vacuum duration" },
         { id: "suckRecharge", name: "FAST PURGE", blurb: "Empty the bag sooner.", effect: "−25% recharge time" },
       ],
@@ -303,8 +303,8 @@
       help: "You hover, so nothing can touch you and you cannot ram. Hold BLOW (or Shift) to blast rivals away from you and over the edge.",
       skills: [
         SPEED_SKILL,
-        { id: "blowRange", name: "WIDER WASH", blurb: "Downwash reaches further out.", effect: "+20% blow range" },
-        { id: "blowPower", name: "HEAVY ROTOR", blurb: "Shove rivals harder.", effect: "+30% blow power" },
+        { id: "blowRange", name: "WIDER WASH", blurb: "Downwash reaches further out.", effect: "+5% blow range" },
+        { id: "blowPower", name: "HEAVY ROTOR", blurb: "Shove rivals harder.", effect: "+10% blow power" },
         { id: "blowDuration", name: "LONG BURST", blurb: "Hold the blast for longer.", effect: "+25% blow duration" },
         { id: "blowRecharge", name: "QUICK SPOOL", blurb: "Spin back up sooner.", effect: "−25% recharge time" },
       ],
@@ -341,7 +341,7 @@
     // a rival driving straight back at the helicopter at 44 m/s², so its ramp is
     // set well above that; the vacuum works with the rival's own approach, so it
     // needs far less.
-    helicopter: { range: 7, accel: 115, speed: 21, duration: 1.6, recharge: 3 },
+    helicopter: { range: 14, accel: 345, speed: 63, duration: 1.6, recharge: 3 },
     // Capture sits just outside body contact (1.1 + 1.5 half-lengths), so a
     // rival dragged onto the nozzle is swallowed rather than bouncing off it.
     vacuum: { range: 8.5, accel: 36, speed: 16, duration: 1.8, recharge: 3.2, capture: 2.5 },
@@ -381,9 +381,9 @@
     if (!base) return null;
     const level = (id) => vehicleLevel(vehicleId, id);
     if (vehicleId === "helicopter") {
-      const power = Math.pow(1.3, level("blowPower"));
+      const power = Math.pow(1.1, level("blowPower"));
       return {
-        range: base.range * Math.pow(1.2, level("blowRange")),
+        range: base.range * Math.pow(1.05, level("blowRange")),
         accel: base.accel * power,
         speed: base.speed * power,
         duration: base.duration * Math.pow(1.25, level("blowDuration")),
@@ -391,9 +391,9 @@
       };
     }
     if (vehicleId === "vacuum") {
-      const power = Math.pow(1.2, level("suckPower"));
+      const power = Math.pow(1.1, level("suckPower"));
       return {
-        range: base.range * Math.pow(1.3, level("suckRange")),
+        range: base.range * Math.pow(1.1, level("suckRange")),
         accel: base.accel * power,
         speed: base.speed * power,
         duration: base.duration * Math.pow(1.25, level("suckDuration")),
@@ -948,15 +948,18 @@
       add("bladeB", 0.28, 0.06, 5, dark, 0, 0, 0, rotor);
       add("tailRotor", 0.05, 1, 1, dark, 0.2, 0.8, -2.25);
     } else if (vehicleId === "vacuum") {
-      addTube("tank", 1.35, 1.5, body, 0, 0.3, -0.25);
-      addTube("lid", 1.2, 0.22, chrome, 0, 1.1, -0.25);
-      add("hose", 0.45, 0.45, 1, dark, 0, -0.05, 0.75);
-      add("nozzle", 1.2, 0.7, 0.5, chrome, 0, -0.12, 1.45);
-      add("gauge", 0.38, 0.38, 0.1, glass, 0, 0.55, 0.48);
-      addTube("wheelL", 0.55, 0.16, dark, -0.72, -0.4, -0.7);
-      addTube("wheelR", 0.55, 0.16, dark, 0.72, -0.4, -0.7);
-      const wheels = pieces.slice(-2);
-      for (const wheel of wheels) wheel.rotation.z = Math.PI / 2;
+      // The suction pulls from every heading, so the intake is a skirt around
+      // the whole body rather than a nozzle on the nose: a forward-facing hose
+      // reads as directional and misleads about what the ability does.
+      addTube("tank", 1.35, 1.5, body, 0, 0.35, 0);
+      addTube("lid", 1.2, 0.22, chrome, 0, 1.15, 0);
+      addTube("intake", 2.1, 0.34, dark, 0, -0.35, 0);
+      addTube("intakeLip", 2.3, 0.14, chrome, 0, -0.52, 0);
+      addTube("collar", 1.5, 0.2, chrome, 0, -0.12, 0);
+      add("gaugeA", 0.34, 0.34, 0.1, glass, 0, 0.6, 0.68);
+      add("gaugeB", 0.34, 0.34, 0.1, glass, 0, 0.6, -0.68);
+      add("gaugeC", 0.1, 0.34, 0.34, glass, 0.68, 0.6, 0);
+      add("gaugeD", 0.1, 0.34, 0.34, glass, -0.68, 0.6, 0);
     } else if (vehicleId === "toaster") {
       // The camera looks straight down, so the slots stay narrow: wide ones
       // cover the shell and the toaster reads as just another dark car.

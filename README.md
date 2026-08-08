@@ -109,13 +109,15 @@ Four vehicles share one run. Each unlocks by reaching a day, is then permanently
 | Vehicle | Unlocks | Button | Behaviour |
 | --- | --- | --- | --- |
 | CAR BOY | Day 1 | `RAM` | The original, unchanged: charge, aim, and shove rivals off the island. |
-| VACUUM | Day 5 | `SUCK` | Still rams normally. Holding SUCK drags rivals inward; anything reaching the nozzle is swallowed. Limited duration, then a recharge. |
+| VACUUM | Day 5 | `SUCK` | Still rams normally. Holding SUCK drags in every rival within range from any direction at once; anything reaching the intake is swallowed. Limited duration, then a recharge. |
 | HELICOPTER | Day 10 | `BLOW` | Hovers above the ground, so it can neither hit nor be hit. Holding BLOW pushes rivals radially away and over the edge. Limited duration, then a recharge. |
 | TOASTER | Day 15 | `LAUNCH` | **Currently disabled.** Driving into rivals loads them into its bread slots instead of ramming them. LAUNCH fires the load at the nearest cliff; out of range they land short and stay in play. |
 
 The toaster is switched off for now via `enabled: false` on its entry in the vehicle table in [foldable-src/foldable.js](foldable-src/foldable.js). It is hidden from the garage and the shop, cannot be selected, and a save naming it resumes in the car — but its skill levels are still read and written, so turning the flag back on restores anything already bought. Its mechanics and its regression coverage are intact and skip themselves while it is off.
 
-The helicopter's gravity is switched off and it holds a fixed hover height, so it never falls and never reaches a rival's collision. Its downwash, and the vacuum's suction, take authority over the rival's radial velocity — a plain impulse cannot win against an AI that accelerates back at 44 m/s². Swallowed and launched rivals go through the production fall handler, so coins, knockout counting, and cleanup all behave exactly as they do for a normal ram.
+The helicopter's gravity is switched off and it holds a fixed hover height, so it never falls and never reaches a rival's collision. Its downwash, and the vacuum's suction, take authority over the rival's radial velocity — a plain impulse cannot win against an AI that accelerates back at 44 m/s². Both abilities are radial and act on every rival inside their range at once, in whichever direction each one happens to lie; neither has a facing or an arc. Swallowed and launched rivals go through the production fall handler, so coins, knockout counting, and cleanup all behave exactly as they do for a normal ram.
+
+The helicopter's base downwash is deliberately overpowering — it clears rivals off the island quickly, and its limit is the 1.6 s burst and 3 s recharge rather than the strength of any single blast. Its two offensive skills move in small steps because the base is already so high.
 
 "Nearest cliff" is resolved by sweeping headings around the toaster and taking the closest one that opens onto a usable stretch of open air, rather than heading straight out from the island centre. The arena is several islands joined by bridges, and a radial shot often lands on a bridge deck.
 
@@ -133,8 +135,8 @@ Skills are split into two categories, both bought from the same coin stash at th
 | Vehicle | Skills |
 | --- | --- |
 | CAR BOY | Speed +18%, push +22%, mass +16% / knockback −18%, ram force +25%, grip +30%, charge time −18% |
-| VACUUM | Speed +18%, vacuum power +20%, vacuum range +30%, vacuum duration +25%, recharge time −25% |
-| HELICOPTER | Speed +18%, blow range +20%, blow power +30%, blow duration +25%, recharge time −25% |
+| VACUUM | Speed +18%, vacuum power +10%, vacuum range +10%, vacuum duration +25%, recharge time −25% |
+| HELICOPTER | Speed +18%, blow range +5%, blow power +10%, blow duration +25%, recharge time −25% |
 | TOASTER | Speed +18%, capacity +1 car, launch range +25%, recharge time −30% |
 
 The recharge skills reduce recharge time, matching the existing `QUICK WIND-UP` upgrade, which reduces charge time. The requested "+25%" and "+30%" are read as that much improvement.

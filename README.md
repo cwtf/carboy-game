@@ -4,9 +4,9 @@ This workspace contains an unchanged capture of the deployed frontend and a sepa
 
 ## Attribution
 
-CAR BOY was created by the original author featured in [the original CAR BOY Reddit post](https://www.reddit.com/r/vibecoding/comments/1vhcbr2/i_vibe_coded_a_game_called_car_boy_about_a_little/).
+CAR BOY was created by [u/QuipPro](https://www.reddit.com/user/QuipPro/), who shared it in [the original CAR BOY Reddit post](https://www.reddit.com/r/vibecoding/comments/1vhcbr2/i_vibe_coded_a_game_called_car_boy_about_a_little/).
 
-This repository is an unofficial modification built on top of that original game. Its changes focus on foldable-device support, responsive presentation, controls, upgrade flow, and local progress saving; credit for the original game, concept, artwork, gameplay, and production build belongs to the original author.
+This repository is an unofficial modification built on top of that original game. Its changes focus on foldable-device support, responsive presentation, controls, vehicles, the skill economy, and local progress saving; credit for the original game, concept, artwork, gameplay, and production build belongs to u/QuipPro.
 
 ## Directory layout
 

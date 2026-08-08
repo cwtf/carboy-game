@@ -9,13 +9,16 @@ The repository root is the complete deployable site. It has no runtime dependenc
 3. Under **Build and deployment**, choose **Deploy from a branch**.
 4. Select the `main` branch and the `/(root)` folder, then save.
 
-For a repository named `carboy-foldable`, the project site will normally be available at:
+The project site is served from the repository name, so a repository named
+`carboy-game` publishes to:
 
 ```text
-https://<username>.github.io/carboy-foldable/
+https://<username>.github.io/carboy-game/
 ```
 
-All browser references are relative, so project-subpath hosting works without editing `index.html`.
+This adaptation is published at <https://cwtf.github.io/carboy-game/>.
+
+All browser references are relative, so project-subpath hosting works whatever the repository is called, without editing `index.html`.
 
 ## Test locally
 

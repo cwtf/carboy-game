@@ -2,6 +2,8 @@
 
 This workspace contains an unchanged capture of the deployed frontend and a separate, locally runnable foldable-phone adaptation.
 
+**Play this adaptation: <https://cwtf.github.io/carboy-game/>**
+
 ## Attribution
 
 CAR BOY was created by [u/QuipPro](https://www.reddit.com/user/QuipPro/), who shared it in [the original CAR BOY Reddit post](https://www.reddit.com/r/vibecoding/comments/1vhcbr2/i_vibe_coded_a_game_called_car_boy_about_a_little/).

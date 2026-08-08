@@ -64,13 +64,15 @@ No separate game images or web fonts are requested. The world and vehicles are p
 
 ## Files changed or added
 
-- `foldable-src/foldable.css` — dynamic viewport, safe-area, touch-target, frame sizing, secondary-panel, and CSS viewport-segment support.
-- `foldable-src/foldable.js` — segment detection, fullscreen safe-viewport layout, live resize/orientation handling, Babylon backing-buffer synchronization, keyboard shortcuts, expanded upgrade-shop mechanics, local autosaving/New Game controls, and secondary status updates.
+- `foldable-src/foldable.css` — dynamic viewport, safe-area, touch-target, frame sizing, secondary-panel, vehicle-picker/shop-section, and CSS viewport-segment support.
+- `foldable-src/foldable.js` — segment detection, fullscreen safe-viewport layout, live resize/orientation handling, Babylon backing-buffer synchronization, keyboard shortcuts, the four playable vehicles and their abilities, the shared/individual skill split, the intermission garage and shop, local autosaving/New Game controls, and secondary status updates.
 - `tools/build-working-copy.cjs` — regenerates `foldable-game/` from the unchanged capture and verifies the original hash.
 - `tools/extract-embedded-assets.cjs` — decodes and checksums the embedded WASM/audio without changing the HTML.
 - `tools/audit-deployment.mjs` — reports scripts, styles, references, asset strings, and map declarations.
 - `tests/original-regression.cjs` — proves the untouched local game starts and runs.
-- `tests/foldable-regression.cjs` — responsive, hinge, backing-buffer, input-coordinate, audio, and no-reload state-preservation checks. The GitHub Pages regression also verifies all seven upgrades, level/cost updates, repeat purchases, stash deduction, explicit continuation, refresh restoration, and confirmed New Game reset.
+- `tests/foldable-regression.cjs` — responsive, hinge, backing-buffer, input-coordinate, audio, and no-reload state-preservation checks.
+- `tests/vehicles-regression.cjs` — day-gated unlocks, helicopter hover/immunity/blow, vacuum drag and swallow, toaster capture/launch including the range limit, the shared-versus-individual skill split, the coin multiplier, and save migration.
+- `tests/github-pages-regression.cjs` — subpath hosting, the sectioned shop, level/cost updates, repeat purchases, stash deduction, explicit continuation, refresh restoration, and confirmed New Game reset.
 
 The generated `foldable-game/index.html` adds viewport metadata and references `foldable.css` and `foldable.js`. It removes only the Cloudflare deployment telemetry helper; the original copy retains that helper and its downloaded response. No game bundle, physics, scoring, controls, audio, tuning, or state code was edited.
 
@@ -84,11 +86,9 @@ After the CSS size changes, the layer calls the existing Babylon engine's `resiz
 
 Keyboard additions reuse the production game's own state and pause UI:
 
-- Hold either Shift key to charge RAM. The direction continuously follows the mouse cursor; release Shift to strike.
+- Hold either Shift key to use the current vehicle's action button. In the car that charges RAM, and the direction continuously follows the mouse cursor; release Shift to strike. The other vehicles act around themselves and ignore the cursor.
 - Press Escape to open or close the existing pause menu when pausing is available.
 - The original touch, pointer, and Space-bar controls remain unchanged.
-
-The intermission upgrade shop now lists all seven production upgrades instead of three random choices. Every card shows its current level and next price. Level 1 costs 10 coins, with each subsequent level costing 10 more coins (`10 × next level`). Purchases deduct from the existing stash immediately and can be repeated for any upgrade while affordable. A separate Start Next Day button ends shopping; it does not grant an extra upgrade.
 
 
 Progressive foldable support uses:
@@ -102,9 +102,48 @@ When two or more segments exist, the script chooses the largest segment for game
 
 The development-only URL hooks `?foldable=vertical&hinge=32` and `?foldable=horizontal&hinge=36` reproduce segmented geometry in a desktop browser for regression testing. They are inactive in ordinary URLs.
 
+## Vehicles
+
+Four vehicles share one run. Each unlocks by reaching a day, is then permanently available, and can be swapped for free from the garage at any intermission. The action button next to the wheel is relabelled per vehicle, and its ring shows that vehicle's meter instead of the ram charge.
+
+| Vehicle | Unlocks | Button | Behaviour |
+| --- | --- | --- | --- |
+| CAR BOY | Day 1 | `RAM` | The original, unchanged: charge, aim, and shove rivals off the island. |
+| VACUUM | Day 5 | `SUCK` | Still rams normally. Holding SUCK drags rivals inward; anything reaching the nozzle is swallowed. Limited duration, then a recharge. |
+| HELICOPTER | Day 10 | `BLOW` | Hovers above the ground, so it can neither hit nor be hit. Holding BLOW pushes rivals radially away and over the edge. Limited duration, then a recharge. |
+| TOASTER | Day 15 | `LAUNCH` | Driving into rivals loads them into its bread slots instead of ramming them. LAUNCH fires the load at the nearest cliff; out of range they land short and stay in play. |
+
+The helicopter's gravity is switched off and it holds a fixed hover height, so it never falls and never reaches a rival's collision. Its downwash, and the vacuum's suction, take authority over the rival's radial velocity — a plain impulse cannot win against an AI that accelerates back at 44 m/s². Swallowed and launched rivals go through the production fall handler, so coins, knockout counting, and cleanup all behave exactly as they do for a normal ram.
+
+"Nearest cliff" is resolved by sweeping headings around the toaster and taking the closest one that opens onto a usable stretch of open air, rather than heading straight out from the island centre. The arena is several islands joined by bridges, and a radial shot often lands on a bridge deck.
+
+## Skills
+
+Skills are split into two categories, both bought from the same coin stash at the same price curve: level 1 costs 10 coins, and each further level costs 10 more (`10 × next level`).
+
+**Shared** skills apply to every vehicle:
+
+- `COIN MAGNET` — +35% magnet range per level.
+- `COIN MULTIPLIER` — +10% coins banked per level, applied when the day's carried coins are banked.
+
+**Individual** skills belong to one vehicle. Each vehicle keeps its own levels and its own prices, so a freshly selected vehicle starts at level 0 on everything and switching is a real trade-off.
+
+| Vehicle | Skills |
+| --- | --- |
+| CAR BOY | Speed +18%, push +22%, mass +16% / knockback −18%, ram force +25%, grip +30%, charge time −18% |
+| VACUUM | Speed +18%, vacuum power +20%, vacuum range +30%, vacuum duration +25%, recharge time −25% |
+| HELICOPTER | Speed +18%, blow range +20%, blow power +30%, blow duration +25%, recharge time −25% |
+| TOASTER | Speed +18%, capacity +1 car, launch range +25%, recharge time −30% |
+
+The recharge skills reduce recharge time, matching the existing `QUICK WIND-UP` upgrade, which reduces charge time. The requested "+25%" and "+30%" are read as that much improvement.
+
+The intermission screen shows the garage first, then the shared section, then the active vehicle's section. Purchases deduct from the stash immediately and can be repeated while affordable. A separate Start Next Day button ends shopping; it does not grant an extra upgrade.
+
 ## Autosave and New Game
 
-Progress is stored automatically in browser `localStorage` under `carboy-progress-v1`. The checkpoint contains the current day, banked coin stash, selected upgrades, and every upgrade's level. On refresh, those values and their gameplay effects are restored before the title screen changes to `CONTINUE DAY N`.
+Progress is stored automatically in browser `localStorage` under `carboy-progress-v2`. The checkpoint contains the current day, banked coin stash, the selected vehicle, every shared skill level, and every vehicle's own skill levels. On refresh, those values and their gameplay effects are restored before the title screen changes to `CONTINUE DAY N`.
+
+A `carboy-progress-v1` save from before the vehicles existed is migrated on read: magnet levels become the shared magnet skill, the remaining upgrades become CAR BOY skills, and the run resumes in the car.
 
 Saving begins once a run starts and updates when progress changes, when upgrades are purchased, when the page is hidden, and when it closes. Refreshing during a fight restarts the current day from its beginning while preserving durable progress. Refreshing from an intermission checkpoints the following day so a cleared day cannot be replayed for duplicate coins.
 
@@ -157,17 +196,24 @@ Two-segment tests also passed:
 
 The final run produced no console errors, uncaught page errors, or failed runtime requests. The modified game requested only `/index.html`, `/foldable.css`, and `/foldable.js`; WASM and audio continued to use the production build's embedded copies. Full measurements are in `test-results/foldable-regression.json`, with screenshots beside it.
 
+The vehicle suite drives each new vehicle through its own mechanics: unlock gating at days 1/5/10/15, the car's untouched charge path, helicopter hover and collision immunity and blow, vacuum drag and swallow, toaster capture, the in-range launch that clears the edge, the out-of-range launch that lands short, the shared-versus-individual skill split, the coin multiplier arithmetic, and both save formats.
+
 Run the verification again with:
 
 ```powershell
 node tests\original-regression.cjs
 node tests\foldable-regression.cjs
+node tests\vehicles-regression.cjs
+node tests\github-pages-regression.cjs
 ```
 
 ## Limitations
 
 - The original source repository and source maps are not exposed, so the adaptation is a carefully isolated runtime layer over a minified production bundle rather than a source-level rebuild.
 - The deployed game had no upgrade pricing logic; it granted one free random upgrade. The new 10-coins-per-next-level price curve is therefore an explicit balance rule added by this adaptation.
+- The vehicles, their abilities, the day-based unlocks, and the shared/individual skill split do not exist in the deployed build. Every ability number (blow and suction strength, ranges, durations, recharges, toaster capacity and launch range) is a balance value chosen here, tuned against the production AI and physics rather than derived from the original.
+- The three new vehicles are built from Babylon primitives using the production build's own materials, so they match the art style but are simpler than the original hand-tuned CAR BOY rig.
+- Ability effects sometimes set a rival's velocity outright instead of applying a force. The production AI accelerates harder than any impulse the layer can afford, so the blow, the suction, the toaster's held stack, and a launched car's arc each take authority over the relevant velocity component for as long as they are active.
 - Application names are partly readable, but reconstructing original modules or safely changing core physics/game logic would require source access.
 - No physical foldable device was attached. Both hinge orientations were tested with deterministic viewport-segment emulation, while the production path uses the browser's real CSS segment environment values or legacy segment rectangles when available.
 - The decoded asset files are archival/convenience copies. The production module still prefers the byte-identical embedded globals, preserving its deployed loading behavior.

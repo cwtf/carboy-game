@@ -166,9 +166,19 @@ const listen = () => new Promise((resolvePromise, reject) => {
       return true;
     });
     await page.waitForSelector(".carboy-upgrade-shop", { state: "visible" });
-    assert.equal(await page.locator(".carboy-upgrade-card").count(), 7);
+    // Shared skills apply to every vehicle; the rest belong to the active one,
+    // which on day 1 is the only unlocked vehicle.
+    assert.deepEqual(await page.locator(".carboy-section-title").evaluateAll((titles) =>
+      titles.map((title) => title.firstChild.textContent.trim())), ["GARAGE", "SHARED SKILLS", "CAR BOY SKILLS"]);
+    assert.equal(await page.locator(".carboy-upgrade-card").count(), 8);
     assert.deepEqual(await page.locator(".carboy-upgrade-card").evaluateAll((cards) =>
-      cards.map((card) => card.dataset.upgradeId)), ["speed", "power", "size", "ram", "magnet", "grip", "charge"]);
+      cards.map((card) => card.dataset.upgradeId)),
+    ["magnet", "multiplier", "speed", "power", "size", "ram", "grip", "charge"]);
+    assert.deepEqual(await page.locator(".carboy-vehicle-card").evaluateAll((cards) =>
+      cards.map((card) => `${card.dataset.vehicleId}:${card.disabled ? "locked" : "open"}`)),
+    ["car:locked", "vacuum:locked", "helicopter:locked", "toaster:locked"]);
+    assert.ok(await page.locator('.carboy-vehicle-card[data-vehicle-id="car"]').evaluate((card) =>
+      card.classList.contains("is-active")), "the car is the active vehicle on day 1");
     assert.match(await page.locator('[data-upgrade-id="speed"]').innerText(), /LEVEL 0[\s\S]*10 COINS/);
 
     await page.locator('[data-upgrade-id="speed"]').click();
@@ -186,7 +196,7 @@ const listen = () => new Promise((resolvePromise, reject) => {
     }));
     assert.equal(upgradeShop.stash, 5);
     assert.equal(upgradeShop.speedLevel, 2);
-    assert.equal(upgradeShop.cardCount, 7);
+    assert.equal(upgradeShop.cardCount, 8);
     assert.match(upgradeShop.speedCard, /LEVEL 2[\s\S]*NEED 30 COINS/);
     assert.equal(upgradeShop.nextText, "START DAY 2");
     assert.equal(upgradeShop.nextVisible, true);
@@ -209,15 +219,27 @@ const listen = () => new Promise((resolvePromise, reject) => {
     const screenshot = path.join(project, "test-results", "github-pages-subpath.png");
     fs.mkdirSync(path.dirname(screenshot), { recursive: true });
     await page.screenshot({ path: screenshot });
-    await page.evaluate(() => {
-      const progress = globalThis.CARBOY.progress;
-      progress.day = 4;
-      progress.stash = 45;
-      progress.taken = ["speed", "speed", "ram"];
-      progress.apply();
-      globalThis.CARBOY_FOLDABLE.save.saveNow();
-    });
-    await page.reload({ waitUntil: "domcontentloaded", timeout: 120000 });
+    // Skill levels now live in the layer's own save, so seed that rather than
+    // the production `taken` list, which is derived from it. The seed and the
+    // reload have to happen in one synchronous step, or the half-second
+    // autosave writes the live run back over it first.
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 120000 }),
+      page.evaluate(() => {
+        localStorage.setItem(globalThis.CARBOY_FOLDABLE.save.key, JSON.stringify({
+          version: 2,
+          day: 4,
+          stash: 45,
+          vehicle: "car",
+          shared: { magnet: 0, multiplier: 0 },
+          vehicles: {
+            car: { speed: 2, power: 0, size: 0, ram: 1, grip: 0, charge: 0 },
+            vacuum: {}, helicopter: {}, toaster: {},
+          },
+        }));
+        location.reload();
+      }),
+    ]);
     await page.waitForFunction(() => globalThis.CARBOY
       && globalThis.CARBOY_FOLDABLE?.save
       && document.querySelector(".carboyStartButton")?.textContent === "CONTINUE DAY 4", null, { timeout: 120000 });
@@ -230,6 +252,7 @@ const listen = () => new Promise((resolvePromise, reject) => {
       startText: document.querySelector(".carboyStartButton").textContent,
       summary: document.querySelector(".carboy-save-summary")?.textContent,
       newGameVisible: document.querySelector('[data-new-game-location="title"]')?.getBoundingClientRect().height >= 44,
+      vehicle: globalThis.CARBOY_FOLDABLE.garage.active,
       saved: globalThis.CARBOY_FOLDABLE.save.read(),
     }));
     assert.deepEqual({
@@ -240,6 +263,7 @@ const listen = () => new Promise((resolvePromise, reject) => {
       titleOpen: saveRestore.titleOpen,
       startText: saveRestore.startText,
       newGameVisible: saveRestore.newGameVisible,
+      vehicle: saveRestore.vehicle,
     }, {
       day: 4,
       stash: 45,
@@ -248,8 +272,9 @@ const listen = () => new Promise((resolvePromise, reject) => {
       titleOpen: true,
       startText: "CONTINUE DAY 4",
       newGameVisible: true,
+      vehicle: "car",
     });
-    assert.match(saveRestore.summary, /DAY 4[\s\S]*STASH 45/);
+    assert.match(saveRestore.summary, /DAY 4[\s\S]*STASH 45[\s\S]*CAR BOY/);
 
     const newGameButton = page.locator('[data-new-game-location="title"]');
     await newGameButton.click();

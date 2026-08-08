@@ -111,7 +111,9 @@ Four vehicles share one run. Each unlocks by reaching a day, is then permanently
 | CAR BOY | Day 1 | `RAM` | The original, unchanged: charge, aim, and shove rivals off the island. |
 | VACUUM | Day 5 | `SUCK` | Still rams normally. Holding SUCK drags rivals inward; anything reaching the nozzle is swallowed. Limited duration, then a recharge. |
 | HELICOPTER | Day 10 | `BLOW` | Hovers above the ground, so it can neither hit nor be hit. Holding BLOW pushes rivals radially away and over the edge. Limited duration, then a recharge. |
-| TOASTER | Day 15 | `LAUNCH` | Driving into rivals loads them into its bread slots instead of ramming them. LAUNCH fires the load at the nearest cliff; out of range they land short and stay in play. |
+| TOASTER | Day 15 | `LAUNCH` | **Currently disabled.** Driving into rivals loads them into its bread slots instead of ramming them. LAUNCH fires the load at the nearest cliff; out of range they land short and stay in play. |
+
+The toaster is switched off for now via `enabled: false` on its entry in the vehicle table in [foldable-src/foldable.js](foldable-src/foldable.js). It is hidden from the garage and the shop, cannot be selected, and a save naming it resumes in the car — but its skill levels are still read and written, so turning the flag back on restores anything already bought. Its mechanics and its regression coverage are intact and skip themselves while it is off.
 
 The helicopter's gravity is switched off and it holds a fixed hover height, so it never falls and never reaches a rival's collision. Its downwash, and the vacuum's suction, take authority over the rival's radial velocity — a plain impulse cannot win against an AI that accelerates back at 44 m/s². Swallowed and launched rivals go through the production fall handler, so coins, knockout counting, and cleanup all behave exactly as they do for a normal ram.
 

@@ -174,9 +174,12 @@ const listen = () => new Promise((resolvePromise, reject) => {
     assert.deepEqual(await page.locator(".carboy-upgrade-card").evaluateAll((cards) =>
       cards.map((card) => card.dataset.upgradeId)),
     ["magnet", "multiplier", "speed", "power", "size", "ram", "grip", "charge"]);
+    // The garage shows exactly the vehicles currently offered, so this survives
+    // a vehicle being switched on or off. On day 1 every card is unclickable:
+    // the car is already active and the rest are still locked.
     assert.deepEqual(await page.locator(".carboy-vehicle-card").evaluateAll((cards) =>
       cards.map((card) => `${card.dataset.vehicleId}:${card.disabled ? "locked" : "open"}`)),
-    ["car:locked", "vacuum:locked", "helicopter:locked", "toaster:locked"]);
+    (await page.evaluate(() => globalThis.CARBOY_FOLDABLE.garage.list())).map((v) => `${v.id}:locked`));
     assert.ok(await page.locator('.carboy-vehicle-card[data-vehicle-id="car"]').evaluate((card) =>
       card.classList.contains("is-active")), "the car is the active vehicle on day 1");
     assert.match(await page.locator('[data-upgrade-id="speed"]').innerText(), /LEVEL 0[\s\S]*10 COINS/);
@@ -220,26 +223,32 @@ const listen = () => new Promise((resolvePromise, reject) => {
     fs.mkdirSync(path.dirname(screenshot), { recursive: true });
     await page.screenshot({ path: screenshot });
     // Skill levels now live in the layer's own save, so seed that rather than
-    // the production `taken` list, which is derived from it. The seed and the
-    // reload have to happen in one synchronous step, or the half-second
-    // autosave writes the live run back over it first.
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 120000 }),
-      page.evaluate(() => {
-        localStorage.setItem(globalThis.CARBOY_FOLDABLE.save.key, JSON.stringify({
-          version: 2,
-          day: 4,
-          stash: 45,
-          vehicle: "car",
-          shared: { magnet: 0, multiplier: 0 },
-          vehicles: {
-            car: { speed: 2, power: 0, size: 0, ram: 1, grip: 0, charge: 0 },
-            vacuum: {}, helicopter: {}, toaster: {},
-          },
-        }));
-        location.reload();
-      }),
-    ]);
+    // the production `taken` list, which is derived from it.
+    //
+    // The seed is written by an init script rather than from the live page:
+    // `location.reload()` does not stop the outgoing document's timers, so the
+    // half-second autosave can still write the running game over the seed
+    // before the navigation commits. The sessionStorage guard makes it fire on
+    // this reload only, leaving the later New Game reload genuinely empty.
+    const seededSave = {
+      version: 2,
+      day: 4,
+      stash: 45,
+      vehicle: "car",
+      shared: { magnet: 0, multiplier: 0 },
+      vehicles: {
+        car: { speed: 2, power: 0, size: 0, ram: 1, grip: 0, charge: 0 },
+        vacuum: {}, helicopter: {}, toaster: {},
+      },
+    };
+    assert.equal(await page.evaluate(() => globalThis.CARBOY_FOLDABLE.save.key), "carboy-progress-v2",
+      "the seeded key matches the layer's save key");
+    await page.addInitScript(({ key, payload }) => {
+      if (sessionStorage.getItem("__carboySeeded")) return;
+      sessionStorage.setItem("__carboySeeded", "1");
+      localStorage.setItem(key, payload);
+    }, { key: "carboy-progress-v2", payload: JSON.stringify(seededSave) });
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 120000 });
     await page.waitForFunction(() => globalThis.CARBOY
       && globalThis.CARBOY_FOLDABLE?.save
       && document.querySelector(".carboyStartButton")?.textContent === "CONTINUE DAY 4", null, { timeout: 120000 });

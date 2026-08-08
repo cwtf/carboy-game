@@ -313,6 +313,9 @@
       id: "toaster",
       name: "TOASTER",
       unlockDay: 15,
+      // Switched off for now. The mechanic and its skills are intact; flip this
+      // back to re-enable it in the garage, the shop, and the save.
+      enabled: false,
       action: "LAUNCH",
       blurb: "Catches rivals in its bread slots, then fires them at the nearest cliff.",
       help: "Drive into rivals to load them into the slots. Press LAUNCH (or Shift) to fire the load at the nearest cliff — get close enough or they land short.",
@@ -327,6 +330,9 @@
 
   const VEHICLES_BY_ID = new Map(VEHICLES.map((vehicle) => [vehicle.id, vehicle]));
   const DEFAULT_VEHICLE_ID = "car";
+  // Disabled vehicles keep their saved skill levels but are hidden everywhere,
+  // so turning one back on restores whatever the player had already bought.
+  const AVAILABLE_VEHICLES = VEHICLES.filter((vehicle) => vehicle.enabled !== false);
 
   // Ability baselines. Individual skills scale these; the shop only ever shows
   // the multiplier, so the raw numbers stay a single place to retune.
@@ -367,7 +373,8 @@
   const upgradeCost = (level) => UPGRADE_BASE_COST * (level + 1);
   const coinMultiplier = () => 1 + 0.1 * sharedLevel("multiplier");
   const currentDay = () => Math.max(1, Math.floor(number(globalThis.CARBOY?.progress?.day, 1)));
-  const isUnlocked = (vehicle) => currentDay() >= vehicle.unlockDay;
+  const isAvailable = (vehicle) => Boolean(vehicle) && vehicle.enabled !== false;
+  const isUnlocked = (vehicle) => isAvailable(vehicle) && currentDay() >= vehicle.unlockDay;
 
   function abilityParams(vehicleId = activeVehicleId) {
     const base = ABILITY_BASE[vehicleId];
@@ -440,7 +447,7 @@
       }
     }
     const requested = VEHICLES_BY_ID.get(value.vehicle);
-    const vehicle = requested && day >= requested.unlockDay ? requested.id : DEFAULT_VEHICLE_ID;
+    const vehicle = isAvailable(requested) && day >= requested.unlockDay ? requested.id : DEFAULT_VEHICLE_ID;
     return { version: 2, day, stash, vehicle, shared, vehicles };
   }
 
@@ -1013,7 +1020,7 @@
 
   function setActiveVehicle(vehicleId, { save = true } = {}) {
     const vehicle = VEHICLES_BY_ID.get(vehicleId);
-    if (!vehicle) return false;
+    if (!isAvailable(vehicle)) return false;
     const game = globalThis.CARBOY;
     releaseHeldCars();
     activeVehicleId = vehicle.id;
@@ -1333,7 +1340,7 @@
         const garageRow = document.createElement("div");
         garageRow.className = "carboy-vehicle-row";
 
-        for (const vehicle of VEHICLES) {
+        for (const vehicle of AVAILABLE_VEHICLES) {
           const unlocked = isUnlocked(vehicle);
           const active = vehicle.id === activeVehicleId;
           const card = document.createElement("button");
@@ -1599,7 +1606,7 @@
       coinMultiplier,
     },
     garage: {
-      list: () => VEHICLES.map((vehicle) => ({
+      list: () => AVAILABLE_VEHICLES.map((vehicle) => ({
         id: vehicle.id,
         name: vehicle.name,
         action: vehicle.action,

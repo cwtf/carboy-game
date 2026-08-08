@@ -139,6 +139,24 @@ const distanceToPlayer = (page, id) => page.evaluate((vehicleId) => {
 const enemyAlive = (page, id) => page.evaluate((vehicleId) =>
   globalThis.CARBOY.enemies.some((candidate) => candidate.vehicle.id === vehicleId), id);
 
+// Places the player and one rival a known distance apart, and confirms the
+// distance actually reads back. Teleports write the mesh position synchronously,
+// so a placement "succeeds" even while the simulation is frozen on a respawn
+// countdown — only re-measuring after a live step catches that.
+async function setupDuel(page, { player, enemy }) {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    await waitForLiveDay(page);
+    await clearEnemies(page);
+    await placePlayer(page, player[0], player[1], player[2]);
+    const id = await spawnEnemyAt(page, enemy[0], enemy[1]);
+    await stepFrames(page, 2);
+    const distance = await distanceToPlayer(page, id);
+    const wanted = Math.hypot(enemy[0] - player[0], enemy[1] - player[2]);
+    if (distance !== null && Math.abs(distance - wanted) < 1) return { id, distance };
+  }
+  throw new Error("could not set up a rival at a known distance from the player");
+}
+
 async function placePlayer(page, x, y, z) {
   for (let attempt = 0; attempt < 6; attempt++) {
     await page.evaluate(({ x, y, z }) => {
@@ -181,20 +199,35 @@ async function placePlayer(page, x, y, z) {
     // ---- unlock gating -----------------------------------------------------
     await setDay(page, 1, 0);
     const day1 = await page.evaluate(() => globalThis.CARBOY_FOLDABLE.garage.list());
-    assert.deepEqual(day1.map((v) => v.unlocked), [true, false, false, false], "only the car is unlocked on day 1");
+    assert.deepEqual(day1.map((v) => v.unlocked), [true, false, false], "only the car is unlocked on day 1");
 
     await setDay(page, 5, 0);
     const day5 = await page.evaluate(() => globalThis.CARBOY_FOLDABLE.garage.list());
-    assert.deepEqual(day5.map((v) => v.unlocked), [true, true, false, false], "vacuum unlocks on day 5");
+    assert.deepEqual(day5.map((v) => v.unlocked), [true, true, false], "vacuum unlocks on day 5");
 
     await setDay(page, 10, 0);
     const day10 = await page.evaluate(() => globalThis.CARBOY_FOLDABLE.garage.list());
-    assert.deepEqual(day10.map((v) => v.unlocked), [true, true, true, false], "helicopter unlocks on day 10");
+    assert.deepEqual(day10.map((v) => v.unlocked), [true, true, true], "helicopter unlocks on day 10");
 
     await setDay(page, 15, 4000);
     const day15 = await page.evaluate(() => globalThis.CARBOY_FOLDABLE.garage.list());
-    assert.deepEqual(day15.map((v) => v.unlocked), [true, true, true, true], "toaster unlocks on day 15");
-    report.unlocks = { day1: day1.map((v) => v.unlocked), day5: day5.map((v) => v.unlocked), day10: day10.map((v) => v.unlocked), day15: day15.map((v) => v.unlocked) };
+    assert.ok(day15.every((v) => v.unlocked), "every offered vehicle is unlocked by day 15");
+    report.unlocks = {
+      offered: day15.map((v) => v.id),
+      day1: day1.map((v) => v.unlocked),
+      day5: day5.map((v) => v.unlocked),
+      day10: day10.map((v) => v.unlocked),
+    };
+
+    // The toaster is switched off for now: it must not appear in the garage,
+    // and selecting it must be refused rather than silently accepted.
+    const toasterEnabled = day15.some((v) => v.id === "toaster");
+    if (!toasterEnabled) {
+      assert.equal(await page.evaluate(() => globalThis.CARBOY_FOLDABLE.garage.select("toaster")), false,
+        "a disabled vehicle cannot be selected");
+      assert.notEqual(await page.evaluate(() => globalThis.CARBOY_FOLDABLE.garage.active), "toaster",
+        "a refused selection leaves the active vehicle alone");
+    }
 
     // Everything below exercises mechanics, so park the run on a day whose
     // quota can never be met and wait for the simulation to be live.
@@ -243,9 +276,7 @@ async function placePlayer(page, x, y, z) {
     assert.equal(heli.chargeHiddenFromGame, false, "the stock ram never sees the helicopter's button");
 
     // Immunity: a rival parked against the helicopter must not register a hit.
-    await clearEnemies(page);
-    await placePlayer(page, 0, 3.2, 0);
-    await spawnEnemyAt(page, 1.2, 0.6);
+    await setupDuel(page, { player: [0, 3.2, 0], enemy: [1.2, 0.6] });
     const hitsBefore = await page.evaluate(() => globalThis.CARBOY.combat.hitCount);
     await stepFrames(page, 120);
     const hitsAfter = await page.evaluate(() => globalThis.CARBOY.combat.hitCount);
@@ -253,11 +284,9 @@ async function placePlayer(page, x, y, z) {
 
     // Blow: hold the ability and the rival must be pushed outward.
     await assertPlaying(page, "the blow test");
-    await clearEnemies(page);
-    await placePlayer(page, 0, 3.2, 0);
-    const blowTarget = await spawnEnemyAt(page, 2, 0);
-    await stepFrames(page, 1);
-    const blowStart = await distanceToPlayer(page, blowTarget);
+    const blowDuel = await setupDuel(page, { player: [0, 3.2, 0], enemy: [2, 0] });
+    const blowTarget = blowDuel.id;
+    const blowStart = blowDuel.distance;
     await page.evaluate(() => { globalThis.CARBOY.controls.charging = true; });
     await stepFrames(page, 45);
     const blowEnd = await distanceToPlayer(page, blowTarget);
@@ -283,11 +312,10 @@ async function placePlayer(page, x, y, z) {
     assert.equal(vacuumGravity, 1, "leaving the helicopter restores gravity");
 
     await assertPlaying(page, "the suck test");
-    await clearEnemies(page);
-    await placePlayer(page, 0, 0.6, 0);
-    const suckTarget = await spawnEnemyAt(page, 5, 0);
-    await stepFrames(page, 1);
-    const suckStart = await distanceToPlayer(page, suckTarget);
+    const suckDuel = await setupDuel(page, { player: [0, 0.6, 0], enemy: [5, 0] });
+    const suckTarget = suckDuel.id;
+    const suckStart = suckDuel.distance;
+    await page.evaluate((id) => { globalThis.__suckTarget = id; }, suckTarget);
     const collectedBefore = await page.evaluate(() => globalThis.CARBOY.pickups.collected);
     await page.evaluate(() => { globalThis.CARBOY.controls.charging = true; });
     await stepFrames(page, 8);
@@ -296,9 +324,11 @@ async function placePlayer(page, x, y, z) {
     assert.ok(suckPulled < suckStart - 0.3, `suck drags rivals inward (${suckStart.toFixed(2)} -> ${suckPulled.toFixed(2)})`);
 
     // Holding on must finish the job: the rival reaches the nozzle and is gone.
-    await stepFrames(page, 60);
+    // This is polled rather than given a fixed frame budget — the pull is weak
+    // at the edge of its range and the tank may need a recharge cycle first.
+    const swallowed = await stepUntil(page, () => !globalThis.CARBOY.enemies
+      .some((candidate) => candidate.vehicle.id === globalThis.__suckTarget), 600);
     await page.evaluate(() => { globalThis.CARBOY.controls.charging = false; });
-    const swallowed = !(await enemyAlive(page, suckTarget));
     const vacuumAfter = await page.evaluate(() => ({
       meter: globalThis.CARBOY_FOLDABLE.garage.state().meter,
       collected: globalThis.CARBOY.pickups.collected,
@@ -309,6 +339,12 @@ async function placePlayer(page, x, y, z) {
     report.vacuum = { suckStart, suckPulled, swallowed, ...vacuumAfter };
 
     // ---- toaster -----------------------------------------------------------
+    // Kept whole but dormant while the toaster is disabled, so re-enabling the
+    // vehicle brings its coverage straight back.
+    if (!toasterEnabled) {
+      report.toaster = "skipped: vehicle disabled";
+      console.log("vehicles-regression: toaster is disabled, skipping its mechanics");
+    } else {
     await page.evaluate(() => globalThis.CARBOY_FOLDABLE.garage.select("toaster"));
     await stepFrames(page, 30);
     const toasterLabel = await page.locator("#chargeBtn .core").textContent();
@@ -319,9 +355,7 @@ async function placePlayer(page, x, y, z) {
 
     // Contact must load rivals into the slots rather than ram them.
     const loadSlots = async () => {
-      await clearEnemies(page);
-      await placePlayer(page, 0, 0.6, 0);
-      await spawnEnemyAt(page, 2.2, 0);
+      await setupDuel(page, { player: [0, 0.6, 0], enemy: [2.2, 0] });
       await spawnEnemyAt(page, -2.2, 0);
       return stepUntil(page, () => globalThis.CARBOY_FOLDABLE.garage.state().held > 0, 400);
     };
@@ -423,18 +457,21 @@ async function placePlayer(page, x, y, z) {
       rimLaunched: rimIds.length,
       afterShortLaunch,
     };
+    }
 
     // ---- skills: shared vs individual, and the save round-trip -------------
+    // Run the economy against the vacuum, which is offered regardless of
+    // whether the toaster is switched on.
+    await page.evaluate(() => globalThis.CARBOY_FOLDABLE.garage.select("vacuum"));
     const economy = await page.evaluate(() => {
       const game = globalThis.CARBOY;
       const foldable = globalThis.CARBOY_FOLDABLE;
-      const before = {
+      return {
         magnet: game.progress.magnetRadius,
         multiplier: foldable.upgrades.coinMultiplier(),
         heliRange: foldable.garage.params("helicopter").range,
-        toasterRange: foldable.garage.params("toaster").range,
+        vacuumRange: foldable.garage.params("vacuum").range,
       };
-      return before;
     });
 
     // Buy through the real shop UI so the purchase path itself is covered.
@@ -447,29 +484,32 @@ async function placePlayer(page, x, y, z) {
     await page.waitForSelector(".carboy-vehicle-row", { timeout: 15000 });
     const sections = await page.evaluate(() => [...document.querySelectorAll(".carboy-section-title")]
       .map((element) => element.firstChild.textContent.trim()));
-    assert.deepEqual(sections, ["GARAGE", "SHARED SKILLS", "TOASTER SKILLS"], "shop splits garage, shared, and individual skills");
+    assert.deepEqual(sections, ["GARAGE", "SHARED SKILLS", "VACUUM SKILLS"], "shop splits garage, shared, and individual skills");
+    assert.deepEqual(await page.locator(".carboy-vehicle-card").evaluateAll((cards) =>
+      cards.map((card) => card.dataset.vehicleId)), day15.map((v) => v.id),
+    "the garage lists exactly the offered vehicles");
 
     const bonusShown = await page.evaluate(() => document.querySelector(".carboy-upgrade-shop")?.textContent.includes("40 coins"));
     assert.ok(bonusShown, "the shop reports the day's raw coin total");
 
     await page.locator('.carboy-shop-section:nth-of-type(2) .carboy-upgrade-card[data-upgrade-id="magnet"]').first().click();
     await page.locator('.carboy-shop-section:nth-of-type(2) .carboy-upgrade-card[data-upgrade-id="multiplier"]').first().click();
-    await page.locator('.carboy-upgrade-card[data-upgrade-id="launchRange"]').first().click();
+    await page.locator('.carboy-upgrade-card[data-upgrade-id="suckRange"]').first().click();
 
     const afterBuying = await page.evaluate(() => {
       const foldable = globalThis.CARBOY_FOLDABLE;
       return {
         magnet: globalThis.CARBOY.progress.magnetRadius,
         multiplier: foldable.upgrades.coinMultiplier(),
-        toasterRange: foldable.garage.params("toaster").range,
+        vacuumRange: foldable.garage.params("vacuum").range,
         heliRange: foldable.garage.params("helicopter").range,
         levels: foldable.garage.levels(),
       };
     });
     assert.ok(afterBuying.magnet > economy.magnet, "the shared magnet skill takes effect");
     assert.ok(Math.abs(afterBuying.multiplier - 1.1) < 1e-9, "the coin multiplier rises in 10% steps");
-    assert.ok(afterBuying.toasterRange > economy.toasterRange, "an individual toaster skill takes effect");
-    assert.equal(afterBuying.heliRange, economy.heliRange, "buying a toaster skill leaves the helicopter untouched");
+    assert.ok(afterBuying.vacuumRange > economy.vacuumRange, "an individual vacuum skill takes effect");
+    assert.equal(afterBuying.heliRange, economy.heliRange, "buying a vacuum skill leaves the helicopter untouched");
     assert.equal(afterBuying.levels.vehicles.helicopter.blowRange, 0, "individual skills are tracked per vehicle");
     report.economy = { before: economy, after: { ...afterBuying, levels: undefined }, levels: afterBuying.levels };
 
@@ -490,9 +530,10 @@ async function placePlayer(page, x, y, z) {
       return JSON.parse(localStorage.getItem(globalThis.CARBOY_FOLDABLE.save.key));
     });
     assert.equal(saved.version, 2, "the save format is versioned");
-    assert.equal(saved.vehicle, "toaster", "the active vehicle is saved");
+    assert.equal(saved.vehicle, "vacuum", "the active vehicle is saved");
     assert.equal(saved.shared.multiplier, 1, "shared skill levels are saved");
-    assert.equal(saved.vehicles.toaster.launchRange, 1, "individual skill levels are saved");
+    assert.equal(saved.vehicles.vacuum.suckRange, 1, "individual skill levels are saved");
+    assert.ok(saved.vehicles.toaster, "a disabled vehicle keeps its skill levels in the save");
 
     // A v1 save must migrate: magnet becomes shared, the rest become car skills.
     const migrated = await page.evaluate(() => {

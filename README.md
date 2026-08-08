@@ -1,210 +1,197 @@
-# Car Boy foldable frontend
+# CAR BOY foldable frontend
 
-This workspace contains an unchanged capture of the deployed frontend and a separate, locally runnable foldable-phone adaptation.
+An unofficial responsive and foldable-device adaptation of CAR BOY, built as an isolated runtime layer around an unchanged capture of the deployed game.
 
-**Play this adaptation: <https://cwtf.github.io/carboy-game/>**
+**Play the adaptation: <https://cwtf.github.io/carboy-game/>**
 
 ## Attribution
 
 CAR BOY was created by [u/QuipPro](https://www.reddit.com/user/QuipPro/), who shared it in [the original CAR BOY Reddit post](https://www.reddit.com/r/vibecoding/comments/1vhcbr2/i_vibe_coded_a_game_called_car_boy_about_a_little/).
 
-This repository is an unofficial modification built on top of that original game. Its changes focus on foldable-device support, responsive presentation, controls, vehicles, the skill economy, and local progress saving; credit for the original game, concept, artwork, gameplay, and production build belongs to u/QuipPro.
+This repository is an unofficial modification. Credit for the original game, concept, artwork, gameplay, and production build belongs to u/QuipPro. The adaptation adds foldable-device support, responsive presentation, keyboard controls, vehicles, a skill economy, and local progress saving.
 
-## Directory layout
+## Current adaptation
 
-- `index.html`, `foldable.css`, `foldable.js`, and `.nojekyll` — the self-contained GitHub Pages site at the repository root.
-- `deployed-original/` — exact main HTML response, response headers, the Cloudflare-injected JavaScript response, and decoded copies of the assets embedded in the HTML.
-- `foldable-src/` — the authored foldable compatibility layer.
-- `foldable-game/` — generated working copy. This is the version to run and modify.
-- `tools/` — deployment audit, embedded-asset extraction, and working-copy build scripts.
-- `tests/` — intact-original and foldable browser regression tests.
-- `test-results/` — screenshots and the machine-readable responsive test report.
+- Full-safe-viewport rendering on phones, tablets, desktops, and foldables.
+- Live resize and orientation changes without reloading the current run.
+- Hinge-aware placement using CSS viewport segments, the legacy Window Segments API, or a normal single-viewport fallback.
+- Original touch and pointer controls, plus keyboard shortcuts.
+- Three currently playable vehicles: CAR BOY, VACUUM, and HELICOPTER.
+- A garage and repeat-purchase skill shop between days.
+- Shared skills and separate skill levels for each vehicle.
+- Browser-local autosave, legacy-save migration, continue support, and confirmed New Game controls.
+- A self-contained GitHub Pages build with no runtime CDN or package dependency.
 
-The downloaded `deployed-original/index.html` is unchanged. Its SHA-256 is:
+## Controls
+
+- Drag on the game screen to steer.
+- Hold the on-screen action button to use the active vehicle's ability.
+- Hold either Shift key to use that ability from a keyboard.
+- While driving CAR BOY, move the mouse while holding Shift to aim, then release Shift to ram.
+- Press Escape to open or close the existing pause menu when pausing is available.
+- The original touch, pointer, and Space-bar controls remain available.
+
+## Vehicles
+
+Vehicle unlocks are based on the current day. Once unlocked, an enabled vehicle remains available and can be selected for free from the garage at any intermission.
+
+| Vehicle | Unlock | Action | Current behavior |
+| --- | ---: | --- | --- |
+| CAR BOY | Day 1 | `RAM` | The original charge, aim, and ram path. |
+| VACUUM | Day 5 | `SUCK` | Still rams on contact. Suction pulls every rival in range toward the intake; rivals that reach it are swallowed. The tank drains while held and recharges after release. |
+| HELICOPTER | Day 10 | `BLOW` | Hovers above collisions, so it cannot hit or be hit. Downwash pushes every rival in range radially outward. The burst has a limited duration and recharge. |
+| TOASTER | Day 15 | `LAUNCH` | **Disabled.** Its implemented mechanic captures rivals in bread slots and launches them toward the nearest usable cliff. |
+
+The toaster is retained behind `enabled: false` in `foldable-src/foldable.js`. It is hidden from the garage and shop, cannot be selected, and a save that names it falls back to CAR BOY. Its skill levels are still read and written, so re-enabling it restores previously saved levels. Its dormant mechanics test is skipped while the flag is off.
+
+The helicopter and vacuum abilities are radial rather than directional. They take authority over the relevant part of a rival's velocity because the production AI accelerates strongly enough to cancel a normal impulse. Swallowed rivals use the production fall handler, preserving normal coins, knockout counting, and cleanup.
+
+The toaster's nearest-cliff implementation sweeps headings around the vehicle and looks for a clear run of open air. That matters because the arena contains several islands joined by bridges; simply firing away from an island center can land a rival on a bridge.
+
+## Skills and shop
+
+The intermission screen presents the garage, shared skills, the active vehicle's individual skills, and an explicit button to start the next day. Switching vehicles is free. Purchases immediately deduct from the coin stash and may be repeated while affordable.
+
+The next level costs `10 × (current level + 1)` coins: Level 1 costs 10, Level 2 costs 20, and so on. Most percentage-based gameplay effects compound once per level; the coin multiplier adds 10 percentage points per level.
+
+Shared skills apply to every vehicle:
+
+- `COIN MAGNET`: 35% more magnet range per level.
+- `COIN MULTIPLIER`: 10% more value from banked coins per level.
+
+Individual skills are stored separately for each vehicle:
+
+| Vehicle | Skills |
+| --- | --- |
+| CAR BOY | Speed +18%, push +22%, mass +16% and knockback taken −18%, ram force +25%, grip +30%, charge time −18% |
+| VACUUM | Speed +18%, suction power +10%, range +10%, duration +25%, recharge time −25% |
+| HELICOPTER | Speed +18%, downwash range +5%, power +10%, duration +25%, recharge time −25% |
+| TOASTER (disabled) | Speed +18%, capacity +1 rival, launch range +25%, recharge time −30% |
+
+## Autosave and New Game
+
+Durable progress is stored in browser `localStorage` under `carboy-progress-v2`. The checkpoint contains:
+
+- current day;
+- banked coin stash;
+- selected vehicle;
+- shared skill levels; and
+- every vehicle's individual skill levels, including the disabled toaster.
+
+A `carboy-progress-v1` save is migrated when read: magnet levels become the shared magnet skill, remaining upgrades become CAR BOY skills, and the run resumes in CAR BOY.
+
+Saving begins after a run starts and updates as progress changes, after purchases or vehicle changes, when the page becomes hidden, and when it closes. Refreshing during a fight restarts that day while preserving durable progress. Refreshing from an intermission checkpoints the following day, preventing a cleared day from being replayed for duplicate coins.
+
+When a save exists, the title screen shows `CONTINUE DAY N` with a save summary. `NEW GAME` is available on the title screen, pause menu, and shop. It requires a second confirmation within 3.5 seconds, then clears both supported save keys and reloads a clean Day 1 game.
+
+Saves are origin-specific. Progress on `127.0.0.1` is separate from progress on GitHub Pages, and clearing browser site data removes it.
+
+## Foldable and responsive behavior
+
+On an ordinary screen, the canvas fills the complete safe viewport. Babylon renders at the current screen aspect ratio and updates the camera projection instead of stretching a fixed 9:16 frame. The layout uses `100dvh` when available and falls back to `100vh`.
+
+Safe-area insets are read from `env(safe-area-inset-*)`. Layout is recomputed after window, visual viewport, element-size, orientation, or viewport-segment changes. Follow-up orientation measurements account for mobile browser chrome and segment metrics that settle asynchronously.
+
+After a CSS size change, the compatibility layer calls the existing Babylon engine's `resize(true)`. It does not set canvas buffer dimensions directly. This preserves the production game's device-pixel-ratio cap and keeps pointer coordinates aligned with the backing buffer.
+
+Segment information is resolved from these sources, in order:
+
+1. Development-only URL simulation hooks.
+2. The legacy `window.getWindowSegments()` API.
+3. CSS `env(viewport-segment-*)` values.
+4. A normal single-viewport fallback.
+
+When multiple segments exist, gameplay occupies the largest segment and never crosses the hinge. A read-only day, coins, combo, speed, vehicle, ability, controls, and status panel uses the best remaining segment.
+
+The development hooks `?foldable=vertical&hinge=32` and `?foldable=horizontal&hinge=36` reproduce segmented geometry in a desktop browser. They are inactive on ordinary URLs.
+
+## Source of truth and generated files
+
+The original unminified game source and source maps are not available. The production Vite-style bundle is minified and concatenated, so this project keeps all modifications in a separate compatibility layer.
+
+```text
+foldable-src/{foldable.css,foldable.js}       authored runtime source
+  └─ tools/build-working-copy.cjs            generates foldable-game/
+       └─ tools/package-github-pages.cjs      generates the deployable root files
+```
+
+Edit only `foldable-src/foldable.css` and `foldable-src/foldable.js` for runtime changes. Do not directly edit:
+
+- `foldable-game/`, which is a generated development build;
+- the root `index.html`, `foldable.css`, or `foldable.js`, which are generated deployment files; or
+- `deployed-original/`, which is the preserved capture.
+
+The build verifies that `deployed-original/index.html` still has this SHA-256:
 
 ```text
 8348c073afa5c7782ba3d396d1830183fbf25a61629fd1e35e062038d22a5d2e
 ```
 
-## What was downloaded
+The generated game adds viewport metadata and local references to `foldable.css` and `foldable.js`. It removes only the captured Cloudflare telemetry helper. The package step adds page metadata, an inline favicon, `.nojekyll`, and a check that all markup references remain local for GitHub Pages project-subpath hosting.
 
-The browser-facing capture is recorded in `deployed-original/download-manifest.json`, including byte sizes and SHA-256 hashes.
+## Repository layout
 
-| File | Bytes | Origin |
-| --- | ---: | --- |
-| `index.html` | 16,945,347 | Unmodified main HTTP response |
-| `response-headers.txt` | 569 | Main response headers |
-| `cdn-cgi/challenge-platform/scripts/jsd/main.js` | 20,510 | Cloudflare-injected referenced script |
-| `cdn-cgi/challenge-platform/scripts/jsd/main.headers.txt` | 1,349 | Redirect and final response headers |
-| `assets/HavokPhysics-BqNY-4N9.wasm` | 2,094,563 | Decoded from the HTML's `__CARBOY_WASM__` payload |
-| `audio/coin-drop.ogg` | 26,049 | Decoded from embedded data URI |
-| `audio/metal-impact.ogg` | 153,266 | Decoded from embedded data URI |
-| `audio/engine-loop.ogg` | 161,185 | Decoded from embedded data URI |
-| `audio/music/intro-1.mp3` | 1,425,619 | Decoded from embedded data URI |
-| `audio/music/intro-2.mp3` | 1,423,733 | Decoded from embedded data URI |
-| `audio/music/day-1.mp3` | 1,038,951 | Decoded from embedded data URI |
-| `audio/music/day-2.mp3` | 776,290 | Decoded from embedded data URI |
-| `audio/music/day-3.mp3` | 1,034,236 | Decoded from embedded data URI |
-| `audio/music/day-4.mp3` | 1,542,913 | Decoded from embedded data URI |
-| `audio/music/day-5.mp3` | 1,501,994 | Decoded from embedded data URI |
+- `foldable-src/`: authored compatibility-layer CSS and JavaScript.
+- `foldable-game/`: generated development build and build manifest.
+- `index.html`, `foldable.css`, `foldable.js`, `.nojekyll`: generated, self-contained GitHub Pages site.
+- `deployed-original/`: unchanged deployed HTML response, headers, Cloudflare helper response, and decoded archival copies of embedded assets.
+- `tools/`: build, packaging, embedded-asset extraction, and deployment-audit scripts.
+- `tests/`: standalone browser regression scripts.
+- `test-results/`: screenshots and machine-readable reports from the latest checked-in run.
+- `GITHUB_PAGES.md`: deployment notes.
 
-The apparent `/assets/...wasm` and `/audio/...` deployment URLs currently return HTTP 404. They are fallback names inside the production module, not live dependencies: the main HTML assigns the complete WASM and audio bytes to globals before the module starts. The decoded files above materialize those already-downloaded bytes at their practical directory structure; `index.html` itself was not changed.
+## Prerequisites
 
-No separate game images or web fonts are requested. The world and vehicles are procedurally built in Babylon.js, shaders are in the bundle, DOM/CSS draws the overlays, and the UI uses system fonts (`Arial Black`, Impact, and fallbacks).
+There is no `package.json`, local npm dependency, bundler, or aggregate test runner. Build tools use Node.js built-ins only.
 
-## Build structure discovered
+For building and local play:
 
-- Production Vite-style ES module bundle, identified by the module-preload polyfill and hashed asset fallback path.
-- Babylon.js 8.56.2, verified at runtime.
-- Havok physics compiled to WebAssembly.
-- Programmatic DOM overlays plus one WebGL canvas.
-- First inline script: 14,906,001 bytes, primarily the Havok binary and audio data.
-- Inline module bundle: 2,036,887 bytes.
-- No dynamic game chunks were found. Worker code used by Babylon is blob-generated from the bundle.
-- The bundle is minified/concatenated production code. Some application class/property names remain readable, but original modules, comments, TypeScript, and project structure are not present.
-- No `sourceMappingURL` directive is present. Explicit checks for `/index.html.map`, `/assets/HavokPhysics-BqNY-4N9.wasm.map`, and the Cloudflare helper's `.map` all returned HTTP 404.
+- Node.js;
+- Python 3, or another static HTTP server.
 
-## Files changed or added
+For browser regression tests:
 
-- `foldable-src/foldable.css` — dynamic viewport, safe-area, touch-target, frame sizing, secondary-panel, vehicle-picker/shop-section, and CSS viewport-segment support.
-- `foldable-src/foldable.js` — segment detection, fullscreen safe-viewport layout, live resize/orientation handling, Babylon backing-buffer synchronization, keyboard shortcuts, the four playable vehicles and their abilities, the shared/individual skill split, the intermission garage and shop, local autosaving/New Game controls, and secondary status updates.
-- `tools/build-working-copy.cjs` — regenerates `foldable-game/` from the unchanged capture and verifies the original hash.
-- `tools/extract-embedded-assets.cjs` — decodes and checksums the embedded WASM/audio without changing the HTML.
-- `tools/audit-deployment.mjs` — reports scripts, styles, references, asset strings, and map declarations.
-- `tests/original-regression.cjs` — proves the untouched local game starts and runs.
-- `tests/foldable-regression.cjs` — responsive, hinge, backing-buffer, input-coordinate, audio, and no-reload state-preservation checks.
-- `tests/vehicles-regression.cjs` — day-gated unlocks, helicopter hover/immunity/blow, vacuum drag and swallow, toaster capture/launch including the range limit, the shared-versus-individual skill split, the coin multiplier, and save migration.
-- `tests/github-pages-regression.cjs` — subpath hosting, the sectioned shop, level/cost updates, repeat purchases, stash deduction, explicit continuation, refresh restoration, and confirmed New Game reset.
+- Microsoft Edge;
+- Playwright resolvable from outside this repository.
 
-The generated `foldable-game/index.html` adds viewport metadata and references `foldable.css` and `foldable.js`. It removes only the Cloudflare deployment telemetry helper; the original copy retains that helper and its downloaded response. No game bundle, physics, scoring, controls, audio, tuning, or state code was edited.
+The tests recognize these optional environment variables when the defaults do not match your machine:
 
-## How foldable handling works
+- `PLAYWRIGHT_MODULE`: absolute path to Playwright's module entry point.
+- `EDGE_PATH`: absolute path to the Edge executable. The default is `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`.
 
-The game canvas now fills the complete safe viewport on ordinary screens. Babylon renders the 3D scene at the live screen aspect ratio and updates its camera projection, rather than scaling a fixed 9:16 image, so the view is wider or taller without geometric distortion. The layer uses `100dvh` when supported and falls back to `100vh`.
+## Build and run locally
 
-Safe-area insets are read from `env(safe-area-inset-*)`. The frame is always placed inside those bounds. On every window resize, `visualViewport` change, `ResizeObserver` callback, or orientation change, the layer recomputes the frame without reloading the page. Orientation changes receive delayed follow-up measurements because mobile browser chrome and segment metrics can settle asynchronously.
-
-After the CSS size changes, the layer calls the existing Babylon engine's `resize(true)`. Babylon retains the game's original touch-device DPR cap (1.25 in this build), updates both canvas backing dimensions, and keeps the canvas CSS dimensions and buffer aspect aligned. The game controls already use `PointerEvent.clientX/clientY`; tests confirm those coordinates remain exact after each resize.
-
-Keyboard additions reuse the production game's own state and pause UI:
-
-- Hold either Shift key to use the current vehicle's action button. In the car that charges RAM, and the direction continuously follows the mouse cursor; release Shift to strike. The other vehicles act around themselves and ignore the cursor.
-- Press Escape to open or close the existing pause menu when pausing is available.
-- The original touch, pointer, and Space-bar controls remain unchanged.
-
-
-Progressive foldable support uses:
-
-- CSS `horizontal-viewport-segments` / `vertical-viewport-segments` media queries.
-- `env(viewport-segment-*)` values, read through hidden measurement probes.
-- The older `window.getWindowSegments()` API when a browser still exposes it.
-- A normal one-viewport responsive fallback everywhere else.
-
-When two or more segments exist, the script chooses the largest segment for gameplay and fills that segment without crossing the hinge. The whole game, HUD, touch controls, title screen, and upgrade UI stay inside it. A read-only day/coins/combo/speed and controls summary uses the best remaining segment. Neither region crosses the hinge.
-
-The development-only URL hooks `?foldable=vertical&hinge=32` and `?foldable=horizontal&hinge=36` reproduce segmented geometry in a desktop browser for regression testing. They are inactive in ordinary URLs.
-
-## Vehicles
-
-Four vehicles share one run. Each unlocks by reaching a day, is then permanently available, and can be swapped for free from the garage at any intermission. The action button next to the wheel is relabelled per vehicle, and its ring shows that vehicle's meter instead of the ram charge.
-
-| Vehicle | Unlocks | Button | Behaviour |
-| --- | --- | --- | --- |
-| CAR BOY | Day 1 | `RAM` | The original, unchanged: charge, aim, and shove rivals off the island. |
-| VACUUM | Day 5 | `SUCK` | Still rams normally. Holding SUCK drags in every rival within range from any direction at once; anything reaching the intake is swallowed. Limited duration, then a recharge. |
-| HELICOPTER | Day 10 | `BLOW` | Hovers above the ground, so it can neither hit nor be hit. Holding BLOW pushes rivals radially away and over the edge. Limited duration, then a recharge. |
-| TOASTER | Day 15 | `LAUNCH` | **Currently disabled.** Driving into rivals loads them into its bread slots instead of ramming them. LAUNCH fires the load at the nearest cliff; out of range they land short and stay in play. |
-
-The toaster is switched off for now via `enabled: false` on its entry in the vehicle table in [foldable-src/foldable.js](foldable-src/foldable.js). It is hidden from the garage and the shop, cannot be selected, and a save naming it resumes in the car — but its skill levels are still read and written, so turning the flag back on restores anything already bought. Its mechanics and its regression coverage are intact and skip themselves while it is off.
-
-The helicopter's gravity is switched off and it holds a fixed hover height, so it never falls and never reaches a rival's collision. Its downwash, and the vacuum's suction, take authority over the rival's radial velocity — a plain impulse cannot win against an AI that accelerates back at 44 m/s². Both abilities are radial and act on every rival inside their range at once, in whichever direction each one happens to lie; neither has a facing or an arc. Swallowed and launched rivals go through the production fall handler, so coins, knockout counting, and cleanup all behave exactly as they do for a normal ram.
-
-The helicopter's base downwash is deliberately overpowering — it clears rivals off the island quickly, and its limit is the 1.6 s burst and 3 s recharge rather than the strength of any single blast. Its two offensive skills move in small steps because the base is already so high.
-
-"Nearest cliff" is resolved by sweeping headings around the toaster and taking the closest one that opens onto a usable stretch of open air, rather than heading straight out from the island centre. The arena is several islands joined by bridges, and a radial shot often lands on a bridge deck.
-
-## Skills
-
-Skills are split into two categories, both bought from the same coin stash at the same price curve: level 1 costs 10 coins, and each further level costs 10 more (`10 × next level`).
-
-**Shared** skills apply to every vehicle:
-
-- `COIN MAGNET` — +35% magnet range per level.
-- `COIN MULTIPLIER` — +10% coins banked per level, applied when the day's carried coins are banked.
-
-**Individual** skills belong to one vehicle. Each vehicle keeps its own levels and its own prices, so a freshly selected vehicle starts at level 0 on everything and switching is a real trade-off.
-
-| Vehicle | Skills |
-| --- | --- |
-| CAR BOY | Speed +18%, push +22%, mass +16% / knockback −18%, ram force +25%, grip +30%, charge time −18% |
-| VACUUM | Speed +18%, vacuum power +10%, vacuum range +10%, vacuum duration +25%, recharge time −25% |
-| HELICOPTER | Speed +18%, blow range +5%, blow power +10%, blow duration +25%, recharge time −25% |
-| TOASTER | Speed +18%, capacity +1 car, launch range +25%, recharge time −30% |
-
-The recharge skills reduce recharge time, matching the existing `QUICK WIND-UP` upgrade, which reduces charge time. The requested "+25%" and "+30%" are read as that much improvement.
-
-The intermission screen shows the garage first, then the shared section, then the active vehicle's section. Purchases deduct from the stash immediately and can be repeated while affordable. A separate Start Next Day button ends shopping; it does not grant an extra upgrade.
-
-## Autosave and New Game
-
-Progress is stored automatically in browser `localStorage` under `carboy-progress-v2`. The checkpoint contains the current day, banked coin stash, the selected vehicle, every shared skill level, and every vehicle's own skill levels. On refresh, those values and their gameplay effects are restored before the title screen changes to `CONTINUE DAY N`.
-
-A `carboy-progress-v1` save from before the vehicles existed is migrated on read: magnet levels become the shared magnet skill, the remaining upgrades become CAR BOY skills, and the run resumes in the car.
-
-Saving begins once a run starts and updates when progress changes, when upgrades are purchased, when the page is hidden, and when it closes. Refreshing during a fight restarts the current day from its beginning while preserving durable progress. Refreshing from an intermission checkpoints the following day so a cleared day cannot be replayed for duplicate coins.
-
-A `NEW GAME` option is available on the continue screen, pause menu, and upgrade shop. It requires a second confirmation click, then clears the local save and reloads a clean Day 1 game.
-
-## Running locally
-
-Rebuild the working copy after changing the compatibility layer:
+Generate the development build after changing the authored compatibility layer:
 
 ```powershell
 node tools\build-working-copy.cjs
+```
+
+Serve it over HTTP because the ES module bundle does not run from a `file://` URL:
+
+```powershell
+python -m http.server 8000 --directory foldable-game
+```
+
+Open <http://127.0.0.1:8000/>.
+
+Generate the deployable GitHub Pages files at the repository root:
+
+```powershell
 node tools\package-github-pages.cjs
 ```
 
-Serve it over HTTP (ES modules should not be opened as a `file://` URL):
+To test that packaged root instead, run `python -m http.server 8000` from the repository root.
 
-```powershell
-python -m http.server 8000
-```
-
-Then open `http://127.0.0.1:8000/`.
-
-The unchanged snapshot can be served independently:
+Serve the unchanged capture independently with:
 
 ```powershell
 python -m http.server 8001 --directory deployed-original
 ```
 
-## Verification results
+## Tests
 
-The intact snapshot test starts Day 1, renders at about 60 FPS, runs its audio context, decodes all three SFX samples, and accepts controls. It also exposes the original mobile bug clearly: without viewport metadata a nominal 412×915 device receives a roughly 981×2177 CSS canvas.
-
-The modified game was started once at 360×800, then resized through every requested size without reloading. The `CARBOY`, engine, and player object references remained identical throughout.
-
-| Viewport | Game frame | Canvas buffer | Pointer error | Result |
-| --- | --- | --- | ---: | --- |
-| 360×800 | 360×800 | 450×1000 | 0 px | Pass |
-| 412×915 | 412×915 | 515×1143 | 0 px | Pass |
-| 717×512 | 717×512 | 896×640 | 0 px | Pass |
-| 768×1024 | 768×1024 | 960×1280 | 0 px | Pass |
-| 884×1104 | 884×1104 | 1105×1380 | 0 px | Pass |
-| 1768×2208 | 1768×2208 | 2210×2760 | 0 px | Pass |
-
-The sequence includes portrait-to-landscape and folded-to-unfolded changes. At every point, the game remained started, the canvas filled the safe viewport, buttons stayed within the frame and at least 44 px tall/wide, and the canvas backing buffer was updated in place. Automated gameplay checks also verified cursor-directed Shift-to-RAM in both directions and Escape pause/resume.
-
-Two-segment tests also passed:
-
-- Vertical hinge at 884×1104: gameplay in the first 426 px segment; secondary UI in the other segment; 32 px hinge untouched.
-- Horizontal hinge at 1768×2208: gameplay in the upper segment; secondary UI in the lower segment; 36 px hinge untouched.
-
-The final run produced no console errors, uncaught page errors, or failed runtime requests. The modified game requested only `/index.html`, `/foldable.css`, and `/foldable.js`; WASM and audio continued to use the production build's embedded copies. Full measurements are in `test-results/foldable-regression.json`, with screenshots beside it.
-
-The vehicle suite drives each new vehicle through its own mechanics: unlock gating at days 1/5/10/15, the car's untouched charge path, helicopter hover and collision immunity and blow, vacuum drag and swallow, toaster capture, the in-range launch that clears the edge, the out-of-range launch that lands short, the shared-versus-individual skill split, the coin multiplier arithmetic, and both save formats.
-
-Run the verification again with:
+Each test is a standalone Node script. It starts an ephemeral Python HTTP server, drives headless Edge through Playwright, and writes screenshots or JSON to `test-results/`. Run the scripts one at a time:
 
 ```powershell
 node tests\original-regression.cjs
@@ -213,16 +200,43 @@ node tests\vehicles-regression.cjs
 node tests\github-pages-regression.cjs
 ```
 
+- `original-regression.cjs` verifies that the untouched captured build boots, renders, accepts controls, and decodes audio.
+- `foldable-regression.cjs` resizes one never-reloaded game through six viewports and two simulated hinge layouts, checking the frame, canvas, backing buffer, input coordinates, touch targets, keyboard shortcuts, and runtime requests.
+- `vehicles-regression.cjs` checks CAR BOY, VACUUM, HELICOPTER, unlock gating, skills, coin multiplication, both save formats, and disabled-toaster safeguards. The toaster mechanics block remains dormant while the vehicle is disabled.
+- `github-pages-regression.cjs` serves the packaged site under a project subpath and checks the shop, purchases, explicit continuation, save restoration, and confirmed New Game reset.
+
+The latest recorded foldable run covered 360×800, 412×915, 717×512, 768×1024, 884×1104, and 1768×2208 without a page reload. It also covered a 32 px vertical hinge and a 36 px horizontal hinge. The recorded run reported exact pointer alignment and no console errors, uncaught page errors, or failed runtime requests. See `test-results/foldable-regression.json` for the complete measurements.
+
+## Captured production build
+
+The downloaded frontend is recorded in `deployed-original/download-manifest.json`, including source, capture time, byte sizes, and SHA-256 hashes.
+
+The build contains:
+
+- a 16,945,347-byte HTML response;
+- Babylon.js 8.56.2, verified at runtime;
+- Havok physics compiled to WebAssembly;
+- programmatic DOM overlays and one WebGL canvas;
+- embedded Havok WASM, three sound effects, and seven music tracks;
+- shaders and blob-generated Babylon worker code inside the bundle; and
+- no source-map declaration or dynamic game chunks.
+
+The apparent `/assets/...wasm` and `/audio/...` paths in the production module were fallback names and returned HTTP 404 at capture time. The browser-ready bytes are assigned to globals inside the HTML before the module starts. `tools/extract-embedded-assets.cjs` materializes archival copies without changing the captured HTML. The running adaptation continues to use the embedded bytes.
+
+No separate game images or web fonts are requested. The world and vehicles are constructed in Babylon.js, shaders are bundled, overlays use DOM and CSS, and the interface uses system font fallbacks.
+
+## GitHub Pages
+
+The repository root is the deployable site. Publish it from the `main` branch and `/(root)` folder in GitHub Pages settings. All runtime references are relative, so the site works under any repository project subpath without editing `index.html`.
+
+See `GITHUB_PAGES.md` for the short deployment checklist.
+
 ## Limitations
 
-- The original source repository and source maps are not exposed, so the adaptation is a carefully isolated runtime layer over a minified production bundle rather than a source-level rebuild.
-- The deployed game had no upgrade pricing logic; it granted one free random upgrade. The new 10-coins-per-next-level price curve is therefore an explicit balance rule added by this adaptation.
-- The vehicles, their abilities, the day-based unlocks, and the shared/individual skill split do not exist in the deployed build. Every ability number (blow and suction strength, ranges, durations, recharges, toaster capacity and launch range) is a balance value chosen here, tuned against the production AI and physics rather than derived from the original.
-- The three new vehicles are built from Babylon primitives using the production build's own materials, so they match the art style but are simpler than the original hand-tuned CAR BOY rig.
-- Ability effects sometimes set a rival's velocity outright instead of applying a force. The production AI accelerates harder than any impulse the layer can afford, so the blow, the suction, the toaster's held stack, and a launched car's arc each take authority over the relevant velocity component for as long as they are active.
-- Application names are partly readable, but reconstructing original modules or safely changing core physics/game logic would require source access.
-- No physical foldable device was attached. Both hinge orientations were tested with deterministic viewport-segment emulation, while the production path uses the browser's real CSS segment environment values or legacy segment rectangles when available.
-- The decoded asset files are archival/convenience copies. The production module still prefers the byte-identical embedded globals, preserving its deployed loading behavior.
-- Saves are browser-local and origin-specific. A save made on `127.0.0.1` is separate from the GitHub Pages save, and clearing browser site data removes it.
-- The deployed bundle does not expose a safe serialization format for live physics, enemies, or partially collected day coins. Refresh therefore restarts the current day rather than resuming the exact frame.
-
+- This is a runtime adaptation over a minified production bundle, not a source-level rebuild.
+- The vehicle abilities, day-based unlocks, shared and individual skill split, and linear price curve are adaptation-specific balance decisions rather than original game features.
+- New vehicle models use Babylon primitives and the production build's materials, so they are simpler than the original CAR BOY rig.
+- Some abilities set velocity rather than applying force so their effect is not immediately canceled by the production AI.
+- No physical foldable device was attached for the recorded tests; hinge layouts were tested with deterministic viewport-segment emulation, while production uses browser-provided segment geometry.
+- The decoded asset files are archival copies. The game still uses the byte-identical embedded globals.
+- Live physics state, enemies, and partially collected coins are not serialized. Refreshing during combat restarts the current day.
